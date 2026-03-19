@@ -57,7 +57,7 @@ cd portal-gobierno-abierto
 ### 3. Configurar Variables de Entorno
 Crea un archivo `.env` en la raíz del proyecto basándote en el archivo de ejemplo (`.env.example`) y configura tus variables, incluyendo la conexión a la base de datos local:
 ```env
-DATABASE_URL="postgresql://admin_portal:password_seguro_123@localhost:5432/gobierno_abierto_db?schema=public"
+DATABASE_URL=postgresql://admin_portal:change_me@localhost:5432/gobierno_abierto_db
 ```
 
 ### 4. Levantar la Base de Datos (Docker)
