@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  db_gobierno_abierto:
+    image: postgres:15-alpine
+    container_name: postgres_gobierno_abierto
+    restart: always
+    env_file:
+      - .env.local
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata_gobierno:/var/lib/postgresql/data
+
+volumes:
+  pgdata_gobierno:
+    name: pgdata_gobierno
