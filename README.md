@@ -42,6 +42,24 @@ Para mantener el repositorio ordenado y escalable, el equipo sigue estas convenc
 
 Sigue estos pasos para levantar el proyecto en tu máquina local para desarrollo.
 
+### Instalación Rápida (1 comando)
+Desde la raíz de `Portal_Gobierno_Abierto` ejecuta:
+
+```bash
+pnpm bootstrap
+```
+
+Este comando ejecuta el script [scripts/bootstrap.mjs](scripts/bootstrap.mjs) y hace automáticamente:
+- crea `.env.local` desde `.env.example` si no existe,
+- instala dependencias con `pnpm install`,
+- levanta PostgreSQL con `docker compose up -d`.
+
+Luego solo inicia el servidor:
+
+```bash
+pnpm dev
+```
+
 ### 1. Pre-requisitos
 Asegúrate de tener instalados:
 * Node.js (v18 o superior recomendado)
@@ -55,7 +73,7 @@ cd portal-gobierno-abierto
 ```
 
 ### 3. Configurar Variables de Entorno
-Crea un archivo `.env` en la raíz del proyecto basándote en el archivo de ejemplo (`.env.example`) y configura tus variables, incluyendo la conexión a la base de datos local:
+Crea un archivo `.env.local` en la raíz del proyecto basándote en el archivo de ejemplo (`.env.example`) y configura tus variables, incluyendo la conexión a la base de datos local:
 ```env
 DATABASE_URL=postgresql://admin_portal:change_me@localhost:5432/gobierno_abierto_db
 ```
@@ -63,20 +81,20 @@ DATABASE_URL=postgresql://admin_portal:change_me@localhost:5432/gobierno_abierto
 ### 4. Levantar la Base de Datos (Docker)
 Inicia el contenedor de PostgreSQL en segundo plano:
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 5. Instalar Dependencias e Inicializar Prisma
 Instala los paquetes de Node e impacta el esquema de la base de datos:
 ```bash
-npm install
-npx prisma db push
-npx prisma generate
+pnpm install
+pnpm prisma db push
+pnpm prisma generate
 ```
 
 ### 6. Iniciar el Servidor de Desarrollo
 ```bash
-npm run dev
+pnpm dev
 ```
 ¡Listo! La aplicación ya debería estar corriendo en `http://localhost:3000`.
 

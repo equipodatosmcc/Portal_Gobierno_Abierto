@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Next.js App Router project with TypeScript and Tailwind CSS",
   "scripts": {
+    "bootstrap": "node scripts/bootstrap.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
