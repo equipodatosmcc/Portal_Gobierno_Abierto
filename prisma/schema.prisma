@@ -1,0 +1,46 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER       // Ciudadano que puede ver cosas privadas o comentar
+  EDITOR     // Puede crear y editar noticias
+  ADMIN      // Puede gestionar usuarios y todos los paneles
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime? // Fecha de cuando verificó el mail
+  image         String?   // URL de la foto de perfil (Google, GitHub, etc)
+  password      String?   // Opcional si usa Google Login
+  role          Role      @default(USER)
+  
+  // Relación: Un usuario puede haber escrito muchas noticias
+  newsWritten   News[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model News {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  content     String
+  published   Boolean  @default(false)
+  
+  // Quién creó la noticia
+  author      User     @relation(fields: [authorId], references: [id])
+  authorId    String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

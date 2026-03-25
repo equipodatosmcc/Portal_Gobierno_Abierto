@@ -11,6 +11,7 @@
   },
   "private": true,
   "dependencies": {
+    "@prisma/client": "^7.5.0",
     "next": "^16.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
@@ -23,6 +24,7 @@
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.0",
     "postcss": "^8.5.8",
+    "prisma": "^7.5.0",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3"
   }
