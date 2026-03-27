@@ -24,7 +24,7 @@ model User {
   role          Role      @default(USER)
   
   // Relación: Un usuario puede haber escrito muchas noticias
-  newsWritten   News[]
+  newsWritten   News[] // ver esto
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -35,11 +35,24 @@ model News {
   title       String
   slug        String   @unique
   content     String
+  image       String?  // URL de la foto principal (opcional)
+  category    String   @default("General") // Ej: Salud, Educación, Obras
   published   Boolean  @default(false)
   
-  // Quién creó la noticia
   author      User     @relation(fields: [authorId], references: [id])
   authorId    String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ContactForm {
+  id          String   @id @default(cuid())
+  name        String   // Nombre del ciudadano
+  email       String   // Correo para responderle
+  subject     String?  // Asunto de la consulta
+  message     String   // El contenido del mensaje
+  status      String   @default("pending") // pending, read, resolved
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
