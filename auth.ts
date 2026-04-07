@@ -1,13 +1,18 @@
 // auth.ts
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import NextAuth from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import prisma from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+const authSecret = process.env.NEXTAUTH_SECRET ?? process.env.BETTER_AUTH_SECRET;
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+if (!authSecret) {
+  throw new Error("Falta NEXTAUTH_SECRET (o BETTER_AUTH_SECRET) para firmar sesiones JWT.");
+}
+
+export const authOptions: NextAuthOptions = {
+  secret: authSecret,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" }, // Usamos JWT para la sesión
   providers: [
@@ -53,4 +58,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
   },
-});
+};

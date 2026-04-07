@@ -1,25 +1,23 @@
-import { PrismaClient, Role } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL no está definido");
-}
-
-const adapter = new PrismaPg({ connectionString });
-const prisma = new PrismaClient({ adapter });
+import { Role } from "@prisma/client";
+import bcrypt from "bcrypt";
+import prisma from "../lib/prisma";
 
 async function main() {
   console.log("🌱 Iniciando seed...");
 
+  const passwordHash = await bcrypt.hash("admin123", 12);
+
   await prisma.user.upsert({
     where: { email: "admin@gobierno.gob.ar" },
-    update: {},
+    update: {
+      name: "Administrador Central",
+      password: passwordHash,
+      role: Role.ADMIN,
+    },
     create: {
       email: "admin@gobierno.gob.ar",
       name: "Administrador Central",
-      password: "admin123", // Almacenar la contraseña sin hash para el seed, pero en producción se debe usar el hash
+      password: passwordHash,
       role: Role.ADMIN,
     },
   });
