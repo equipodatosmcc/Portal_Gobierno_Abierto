@@ -5,6 +5,7 @@
   "scripts": {
     "bootstrap": "node scripts/bootstrap.mjs",
     "db:up": "docker compose up -d db_gobierno_abierto && pnpm prisma migrate deploy && pnpm prisma db seed",
+    "db:migrate": "docker compose up -d db_gobierno_abierto && pnpm prisma migrate deploy",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
