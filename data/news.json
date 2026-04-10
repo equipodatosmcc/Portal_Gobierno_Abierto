@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "title": "Se presentó el nuevo plan de participación ciudadana",
+    "bajada": "La Municipalidad anunció una agenda de encuentros abiertos en barrios y delegaciones.",
+    "cuerpo": "El programa busca fortalecer el vínculo con vecinas y vecinos, incorporando herramientas digitales y espacios presenciales de escucha activa.",
+    "image": null,
+    "published": true,
+    "createdAt": "2026-04-07T15:30:00.000Z",
+    "updatedAt": "2026-04-07T15:30:00.000Z"
+  },
+  {
+    "id": 2,
+    "title": "Convocatoria para mesas de trabajo de Gobierno Abierto",
+    "bajada": "Se abrió la inscripción para organizaciones e instituciones interesadas en participar.",
+    "cuerpo": "Las mesas abordarán transparencia, innovación y acceso a la información pública con una metodología colaborativa y seguimiento trimestral.",
+    "image": null,
+    "published": true,
+    "createdAt": "2026-04-08T12:00:00.000Z",
+    "updatedAt": "2026-04-10T13:11:37.063Z"
+  },
+  {
+    "id": 3,
+    "title": "Comenzó la modernización del portal de trámites municipales",
+    "bajada": "La actualización prioriza accesibilidad, velocidad y simplificación de pasos para la ciudadanía.",
+    "cuerpo": "El equipo técnico inició una etapa de rediseño integral que incorpora mejoras en formularios, seguimiento de expedientes y documentación en lenguaje claro.",
+    "image": null,
+    "published": false,
+    "createdAt": "2026-04-09T09:15:00.000Z",
+    "updatedAt": "2026-04-10T11:36:39.424Z"
+  },
+  {
+    "id": 4,
+    "title": "Nueva agenda de capacitaciones para referentes barriales",
+    "bajada": "Habrá encuentros semanales sobre herramientas digitales y acceso a información pública.",
+    "cuerpo": "Las capacitaciones están orientadas a fortalecer redes comunitarias y promover la participación de organizaciones locales en procesos de consulta y co-creación.",
+    "image": null,
+    "published": true,
+    "createdAt": "2026-04-09T10:30:00.000Z",
+    "updatedAt": "2026-04-10T13:11:34.477Z"
+  },
+  {
+    "id": 5,
+    "title": "Se habilitó un canal único para reportes ciudadanos para todos",
+    "bajada": "El nuevo canal centraliza reclamos, sugerencias y solicitudes de información y más",
+    "cuerpo": "Con esta herramienta, las áreas municipales podrán responder en menor tiempo y ofrecer trazabilidad del estado de cada gestión en una vista unificada.",
+    "image": null,
+    "published": false,
+    "createdAt": "2026-04-09T11:45:00.000Z",
+    "updatedAt": "2026-04-10T13:11:32.609Z"
+  },
+  {
+    "id": 6,
+    "title": "Playas más seguras: Corrientes refuerza operativos para la temporada",
+    "bajada": "El municipio implementa nuevas medidas de prevención, tecnología y mayor presencia de guardavidas para garantizar la seguridad en las playas públicas.",
+    "cuerpo": "A partir del lanzamiento del programa “Playas más seguras”, la ciudad de Corrientes intensificó los controles y operativos en sus principales balnearios con el objetivo de brindar mayor tranquilidad a vecinos y turistas durante la temporada.\r\n\r\nEl plan incluye un refuerzo significativo en la presencia de guardavidas, quienes ahora cuentan con nuevos equipos de rescate y comunicación para actuar con mayor rapidez ante emergencias. Además, se incorporaron puestos de vigilancia estratégicamente ubicados para mejorar la cobertura en zonas de mayor concurrencia.\r\n\r\nOtra de las novedades es la implementación de tecnología para la prevención, como sistemas de monitoreo y señalización actualizada sobre el estado del río, corrientes y zonas habilitadas para el baño. Estas herramientas permiten alertar a los visitantes en tiempo real y reducir situaciones de riesgo.\r\n\r\nDesde el municipio destacaron también el trabajo coordinado con fuerzas de seguridad y equipos de salud, que mantienen operativos permanentes para asistir ante cualquier incidente. Asimismo, se reforzaron las campañas de concientización para promover conductas responsables, como respetar las indicaciones de los guardavidas y evitar ingresar al agua en sectores no habilitados.\r\n\r\nCon estas medidas, Corrientes busca consolidarse como un destino turístico seguro, priorizando el bienestar de quienes disfrutan de sus playas y fomentando una convivencia ordenada en los espacios públicos.",
+    "published": false,
+    "image": "/uploads/news/1775823611354-2963ce41-b858-468f-9bc7-c804199dbfc2.png",
+    "createdAt": "2026-04-10T12:20:11.359Z",
+    "updatedAt": "2026-04-10T12:20:11.359Z"
+  }
+]
