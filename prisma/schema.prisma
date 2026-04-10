@@ -57,3 +57,14 @@ model ContactForm {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model WebContent {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  title       String
+  content     String
+  published   Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

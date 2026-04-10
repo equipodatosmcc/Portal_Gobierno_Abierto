@@ -98,6 +98,33 @@ pnpm dev
 ```
 ¡Listo! La aplicación ya debería estar corriendo en `http://localhost:3000`.
 
+### 7. Probar API con Swagger
+Con el servidor levantado, abre:
+
+- `http://localhost:3000/docs`
+
+Swagger consumirá la especificación en `GET /api/openapi` y permite probar:
+
+- CRUD de noticias: `/api/news` y `/api/news/{id}`
+- CRUD de textos: `/api/texts` y `/api/texts/{id}` (alias disponibles también en `/api/webcontent`)
+
+Para endpoints protegidos (`POST`, `PATCH`, `DELETE`), primero inicia sesión en la app con un usuario `ADMIN` o `EDITOR` y luego abre Swagger en la misma sesión del navegador.
+
+### 8. Upload local similar a servidor municipal
+Las imágenes de noticias se guardan en:
+
+- `public/uploads/news`
+
+Para simular mejor un servidor municipal local, se recomienda usar una carpeta persistente fuera del repo y enlazarla como junction de Windows:
+
+1. Crear carpeta persistente:
+   - `C:/srv/muni-uploads/news`
+2. Si existe `public/uploads/news`, eliminarla (solo la carpeta, no el repo).
+3. Crear junction desde la raíz del proyecto:
+   - `cmd /c mklink /J public\\uploads\\news C:\\srv\\muni-uploads\\news`
+
+Con eso, la app sigue devolviendo URLs públicas como `/uploads/news/imagen.jpg`, pero los archivos quedan físicamente en una ruta persistente estilo servidor.
+
 ---
 
 ## 📂 Estructura de la Base de Datos (Prisma)
