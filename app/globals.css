@@ -2,12 +2,145 @@
 
 :root {
   color-scheme: light;
+  --background: 0 0% 96%;
+  --foreground: 0 0% 9%;
+
+  --card: 0 0% 98%;
+  --card-foreground: 0 0% 9%;
+
+  --primary: 161 93% 30%;
+  --primary-foreground: 151 80% 95%;
+
+  --secondary: 0 0% 32%;
+  --secondary-foreground: 0 0% 98%;
+
+  --muted: 0 0% 63%;
+  --muted-foreground: 0 0% 34%;
+
+  --accent: 166 76% 96%;
+  --accent-foreground: 173 80% 30%;
+
+  --border: 0 0% 83%;
+  --input: 0 0% 83%;
+  --ring: 161 93% 30%;
+
+  --gov-cyan-light: 200 65% 45%;
+  --gov-dark: 200 25% 15%;
+  --gov-dark-light: 200 20% 32%;
+  --gov-green: 152 60% 42%;
+  --gov-warm: 200 15% 96%;
+}
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-gov-cyan-light: hsl(var(--gov-cyan-light));
+  --color-gov-dark: hsl(var(--gov-dark));
+  --color-gov-dark-light: hsl(var(--gov-dark-light));
+  --color-gov-green: hsl(var(--gov-green));
+  --color-gov-warm: hsl(var(--gov-warm));
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-  color: #0f172a;
-  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading), serif;
+}
+
+section[id] {
+  scroll-margin-top: 5.5rem;
+}
+
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid hsl(var(--gov-cyan-light));
+  outline-offset: 2px;
+}
+
+.text-gradient-cyan {
+  background: linear-gradient(135deg, hsl(152 60% 55%), hsl(161 80% 45%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px hsla(161 80% 35% / 0.4));
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-count-up {
+  animation: count-up 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.news-detail-surface {
+  animation: news-detail-enter 0.55s cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+@keyframes news-detail-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

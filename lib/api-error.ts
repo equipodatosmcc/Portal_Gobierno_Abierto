@@ -1,15 +1,24 @@
-import { Prisma } from "@prisma/client";
+function getPrismaCode(error: unknown) {
+  if (typeof error === "object" && error !== null && "code" in error) {
+    const code = (error as { code?: unknown }).code;
+    return typeof code === "string" ? code : null;
+  }
+
+  return null;
+}
 
 export function toApiError(error: unknown) {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === "P2002") {
+  const prismaCode = getPrismaCode(error);
+
+  if (prismaCode) {
+    if (prismaCode === "P2002") {
       return {
         status: 409,
         message: "Ya existe un registro con ese valor único (por ejemplo slug).",
       };
     }
 
-    if (error.code === "P2025") {
+    if (prismaCode === "P2025") {
       return {
         status: 404,
         message: "No se encontró el registro solicitado.",

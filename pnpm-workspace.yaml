@@ -3,3 +3,7 @@ ignoredBuiltDependencies:
   - prisma
   - sharp
   - unrs-resolver
+
+onlyBuiltDependencies:
+  - bcrypt
+  - esbuild

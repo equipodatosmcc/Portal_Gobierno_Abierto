@@ -1,6 +1,5 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
 import { requireSessionManager } from "@/lib/content-auth";
 import {
   parseWebContentCreateFromFormData,
@@ -17,8 +16,18 @@ type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string };
 
+function hasPrismaCode(error: unknown, code: string) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof (error as { code?: unknown }).code === "string" &&
+    (error as { code: string }).code === code
+  );
+}
+
 function getErrorMessage(error: unknown) {
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+  if (hasPrismaCode(error, "P2002")) {
     return "Ya existe un registro con ese slug.";
   }
 

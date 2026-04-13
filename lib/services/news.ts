@@ -28,7 +28,7 @@ export async function createNews(data: CreateNewsInput) {
 export async function findManyNews(options?: { onlyPublished?: boolean }) {
   return prisma.news.findMany({
     where: options?.onlyPublished ? { published: true } : undefined,
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
   });
 }
 

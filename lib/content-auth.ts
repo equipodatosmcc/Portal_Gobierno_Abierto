@@ -1,11 +1,10 @@
 import { authOptions } from "@/auth";
 import prisma from "@/lib/prisma";
-import { Role } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
-const MANAGER_ROLES = new Set<Role>([Role.ADMIN, Role.EDITOR]);
+const MANAGER_ROLES = new Set(["ADMIN", "EDITOR"]);
 
-export function canManageContent(role?: Role): boolean {
+export function canManageContent(role?: string | null): boolean {
   return role ? MANAGER_ROLES.has(role) : false;
 }
 

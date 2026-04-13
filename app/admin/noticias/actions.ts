@@ -5,7 +5,9 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { readNewsFile, writeNewsFile } from "./news-store";
+import { requireSessionManager } from "@/lib/content-auth";
+import { createNews, findManyNews, findNewsById, updateNews } from "@/lib/services/news";
+import { serializeNewsContent } from "./content-format";
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -21,6 +23,39 @@ function buildErrorState(
   fieldErrors?: Partial<Record<"title" | "bajada" | "cuerpo" | "image", string>>,
 ): NewsEditorState {
   return { status: "error", message, fieldErrors };
+}
+
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
+}
+
+async function buildUniqueSlug(title: string, currentId?: number) {
+  const baseSlug = slugify(title) || "noticia";
+  const news = await findManyNews();
+  const takenSlugs = new Set(news.filter((item) => item.id !== currentId).map((item) => item.slug));
+
+  if (!takenSlugs.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  let counter = 2;
+  let candidate = `${baseSlug}-${counter}`;
+
+  while (takenSlugs.has(candidate)) {
+    counter += 1;
+    candidate = `${baseSlug}-${counter}`;
+  }
+
+  return candidate;
 }
 
 function sanitizeImageExtension(fileName: string, mimeType: string) {
@@ -83,13 +118,15 @@ async function removeStoredImage(imagePath: string | null | undefined) {
 }
 
 export async function saveNewsAction(_: NewsEditorState, formData: FormData): Promise<NewsEditorState> {
+  let uploadedImagePath: string | null = null;
+
   try {
+    const manager = await requireSessionManager();
     const idRaw = formData.get("id");
     const title = String(formData.get("title") ?? "").trim();
     const bajada = String(formData.get("bajada") ?? "").trim();
     const cuerpo = String(formData.get("cuerpo") ?? "").trim();
     const statusValue = String(formData.get("status") ?? "draft");
-    const existingImage = String(formData.get("existingImage") ?? "").trim();
     const imageInput = formData.get("image");
 
     const fieldErrors: NewsEditorState["fieldErrors"] = {};
@@ -102,66 +139,78 @@ export async function saveNewsAction(_: NewsEditorState, formData: FormData): Pr
       return buildErrorState("Revisá los datos del formulario.", fieldErrors);
     }
 
-    const uploadedImage = imageInput instanceof File && imageInput.size > 0 ? imageInput : null;
-    let imagePath = existingImage || null;
-
-    if (uploadedImage) {
-      try {
-        imagePath = await saveImageFile(uploadedImage);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "No se pudo guardar la imagen.";
-        return buildErrorState(message, { image: message });
-      }
-    }
-
     const published = statusValue === "published";
-    const now = new Date().toISOString();
+    const content = serializeNewsContent({ bajada, cuerpo });
     const id = Number(idRaw);
     const hasId = Number.isInteger(id) && id > 0;
-
-    const news = await readNewsFile();
+    const uploadedImage = imageInput instanceof File && imageInput.size > 0 ? imageInput : null;
 
     if (hasId) {
-      const index = news.findIndex((item) => item.id === id);
-      if (index === -1) {
+      const current = await findNewsById(id);
+      if (!current) {
         return buildErrorState("La noticia que querés editar ya no existe.");
       }
 
-      const current = news[index];
-      news[index] = {
-        ...current,
+      let imagePath = current.image;
+
+      if (uploadedImage) {
+        try {
+          imagePath = await saveImageFile(uploadedImage);
+          uploadedImagePath = imagePath;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "No se pudo guardar la imagen.";
+          return buildErrorState(message, { image: message });
+        }
+      }
+
+      const slug = title === current.title ? current.slug : await buildUniqueSlug(title, id);
+
+      await updateNews(id, {
         title,
-        bajada,
-        cuerpo,
+        slug,
+        content,
         published,
         image: imagePath,
-        updatedAt: now,
-      };
+      });
 
       if (uploadedImage && current.image && current.image !== imagePath) {
         await removeStoredImage(current.image);
       }
     } else {
-      const nextId = news.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+      let imagePath: string | null = null;
 
-      news.push({
-        id: nextId,
+      if (uploadedImage) {
+        try {
+          imagePath = await saveImageFile(uploadedImage);
+          uploadedImagePath = imagePath;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "No se pudo guardar la imagen.";
+          return buildErrorState(message, { image: message });
+        }
+      }
+
+      const slug = await buildUniqueSlug(title);
+
+      await createNews({
         title,
-        bajada,
-        cuerpo,
+        slug,
+        content,
+        category: "Noticias",
         published,
         image: imagePath,
-        createdAt: now,
-        updatedAt: now,
+        authorId: manager.userId,
       });
     }
-
-    await writeNewsFile(news);
   } catch (error) {
+    if (uploadedImagePath) {
+      await removeStoredImage(uploadedImagePath);
+    }
+
     const message = error instanceof Error ? error.message : "No pudimos guardar la noticia.";
     return buildErrorState(message);
   }
 
+  revalidatePath("/");
   revalidatePath("/admin/noticias");
   revalidatePath("/admin/noticias/editor");
   redirect("/admin/noticias");
@@ -173,19 +222,19 @@ export async function toggleNewsStatusAction(formData: FormData) {
     throw new Error("ID inválido.");
   }
 
-  const news = await readNewsFile();
-  const index = news.findIndex((item) => item.id === id);
+  await requireSessionManager();
 
-  if (index !== -1) {
-    const item = news[index];
-    news[index] = {
-      ...item,
-      published: !item.published,
-      updatedAt: new Date().toISOString(),
-    };
-    await writeNewsFile(news);
+  const news = await findNewsById(id);
+
+  if (!news) {
+    throw new Error("La noticia no existe.");
   }
 
+  await updateNews(id, {
+    published: !news.published,
+  });
+
+  revalidatePath("/");
   revalidatePath("/admin/noticias");
   revalidatePath("/admin/noticias/editor");
   redirect("/admin/noticias");
