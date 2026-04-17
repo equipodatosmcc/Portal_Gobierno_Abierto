@@ -48,10 +48,12 @@ model News {
 
 model ContactForm {
   id          String   @id @default(cuid())
+  type        String   @default("sugerencia") // nuevo_dataset, actualizar_dataset, reclamo, sugerencia
   name        String   // Nombre del ciudadano
   email       String   // Correo para responderle
   subject     String?  // Asunto de la consulta
   message     String   // El contenido del mensaje
+  dataset     String?  // Dataset relacionado
   status      String   @default("pending") // pending, read, resolved
   
   createdAt   DateTime @default(now())

@@ -82,7 +82,7 @@ export default async function Home() {
           datasetsCount={120}
           dashboardsCount={15}
           citizensReached="380K"
-          reportsCount={Math.max(45, transparencyContent.length * 10)}
+          reportsCount={Math.max(45, transparencyContent.cards.length * 10)}
         />
         <DashboardsSection />
         <TransparencySection contents={transparencyContent} />
