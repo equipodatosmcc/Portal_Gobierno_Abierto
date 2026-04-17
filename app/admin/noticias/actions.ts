@@ -128,6 +128,7 @@ export async function saveNewsAction(_: NewsEditorState, formData: FormData): Pr
     const cuerpo = String(formData.get("cuerpo") ?? "").trim();
     const statusValue = String(formData.get("status") ?? "draft");
     const imageInput = formData.get("image");
+    const category = String(formData.get("category") ?? "General").trim();
 
     const fieldErrors: NewsEditorState["fieldErrors"] = {};
 
@@ -169,6 +170,7 @@ export async function saveNewsAction(_: NewsEditorState, formData: FormData): Pr
         title,
         slug,
         content,
+        category,
         published,
         image: imagePath,
       });
@@ -195,7 +197,7 @@ export async function saveNewsAction(_: NewsEditorState, formData: FormData): Pr
         title,
         slug,
         content,
-        category: "Noticias",
+        category,
         published,
         image: imagePath,
         authorId: manager.userId,

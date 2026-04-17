@@ -10,9 +10,11 @@ type NewsEditorFormProps = {
     title: string;
     bajada: string;
     cuerpo: string;
+    category?: string;
     status: "draft" | "published";
     imageUrl?: string | null;
   };
+  existingCategories: string[];
 };
 
 const initialActionState: NewsEditorState = { status: "idle" };
@@ -46,9 +48,16 @@ function validateFormData(formData: FormData): ClientFieldErrors {
   return errors;
 }
 
-export function NewsEditorForm({ initialData }: NewsEditorFormProps) {
+export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFormProps) {
   const [state, formAction, isPending] = useActionState(saveNewsAction, initialActionState);
   const [clientErrors, setClientErrors] = useState<ClientFieldErrors>({});
+
+  const isInitialCategoryExisting = initialData.category ? existingCategories.includes(initialData.category) : true;
+  
+  const [isNewCategory, setIsNewCategory] = useState(!isInitialCategoryExisting);
+  const [selectedCategory, setSelectedCategory] = useState(
+    !isInitialCategoryExisting ? "" : (initialData.category || existingCategories[0])
+  );
 
   const mergedErrors = useMemo(() => ({ ...state.fieldErrors, ...clientErrors }), [clientErrors, state.fieldErrors]);
 
@@ -116,7 +125,7 @@ export function NewsEditorForm({ initialData }: NewsEditorFormProps) {
         {mergedErrors.cuerpo ? <p className="text-xs font-medium text-red-600">{mergedErrors.cuerpo}</p> : null}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[1fr_220px]">
+      <div className="grid gap-4 md:grid-cols-[1fr_220px_220px]">
         <div className="space-y-2">
           <label htmlFor="image" className="text-sm font-semibold text-slate-700">
             Imagen principal
@@ -130,6 +139,47 @@ export function NewsEditorForm({ initialData }: NewsEditorFormProps) {
           />
           {mergedErrors.image ? <p className="text-xs font-medium text-red-600">{mergedErrors.image}</p> : null}
           <p className="text-xs text-slate-500">Formatos permitidos: JPG, PNG o WEBP. Tamaño máximo 5MB.</p>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="category" className="text-sm font-semibold text-slate-700">
+            Categoría
+          </label>
+          <select
+            id="category-select"
+            value={isNewCategory ? "NEW_CATEGORY_ACTION" : selectedCategory}
+            onChange={(e) => {
+              if (e.target.value === "NEW_CATEGORY_ACTION") {
+                setIsNewCategory(true);
+                setSelectedCategory("");
+              } else {
+                setIsNewCategory(false);
+                setSelectedCategory(e.target.value);
+              }
+            }}
+            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus-visible:border-sky-600 focus-visible:ring-4 focus-visible:ring-sky-100"
+            name={isNewCategory ? "category_ignore" : "category"}
+          >
+            {existingCategories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+            <option value="NEW_CATEGORY_ACTION" className="font-semibold text-sky-700">
+              ➕ Agregar nueva categoría...
+            </option>
+          </select>
+          {isNewCategory && (
+            <input
+              type="text"
+              name="category"
+              autoFocus
+              placeholder="Nueva categoría..."
+              required
+              className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus-visible:border-sky-600 focus-visible:ring-4 focus-visible:ring-sky-100"
+              defaultValue={!isInitialCategoryExisting ? initialData.category : ""}
+            />
+          )}
         </div>
 
         <div className="space-y-2">

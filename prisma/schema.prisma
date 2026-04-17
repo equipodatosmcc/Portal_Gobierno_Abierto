@@ -63,6 +63,7 @@ model WebContent {
   slug        String   @unique
   title       String
   content     String
+  icon        String?
   published   Boolean  @default(false)
 
   createdAt   DateTime @default(now())

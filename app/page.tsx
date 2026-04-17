@@ -29,7 +29,7 @@ type WebContentRecord = {
   content: string;
 };
 
-async function getHomeData(): Promise<{ news: HomeNewsItem[]; transparencyContent: HomeWebContentItem[] }> {
+async function getHomeData() {
   const [newsRecords, contentRecords] = await Promise.all([
     findManyNews({ onlyPublished: true }).catch(() => []),
     findManyWebContent({ onlyPublished: true }).catch(() => []),
@@ -45,12 +45,26 @@ async function getHomeData(): Promise<{ news: HomeNewsItem[]; transparencyConten
     createdAt: item.updatedAt.toISOString(),
   }));
 
-  const transparencyContent = (contentRecords as WebContentRecord[]).slice(0, 4).map((item) => ({
-    id: item.id,
-    slug: item.slug,
-    title: item.title,
-    content: item.content,
-  }));
+  const transparencyRecords = (contentRecords as WebContentRecord[]).filter((c) =>
+    c.slug.startsWith("transparencia-")
+  );
+
+  const mainRecord = transparencyRecords.find((c) => c.slug === "transparencia-main");
+  const cardsRecords = transparencyRecords
+    .filter((c) => c.slug !== "transparencia-main")
+    .sort((a, b) => a.slug.localeCompare(b.slug))
+    .slice(0, 4);
+
+  const transparencyContent = {
+    main: mainRecord ? { title: mainRecord.title, content: mainRecord.content } : null,
+    cards: cardsRecords.map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      title: item.title,
+      content: item.content,
+      icon: item.icon,
+    })),
+  };
 
   return { news, transparencyContent };
 }

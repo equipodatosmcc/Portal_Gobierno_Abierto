@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NewsEditorForm } from "./news-editor-form";
 import { getNewsById } from "../data";
+import prisma from "@/lib/prisma";
 
 type EditorPageProps = {
   searchParams: Promise<{
@@ -14,12 +15,24 @@ export default async function NewsEditorPage({ searchParams }: EditorPageProps) 
   const hasValidId = Number.isInteger(id) && id > 0;
   const existingNews = hasValidId ? await getNewsById(id) : null;
 
+  const categoryRecords = await prisma.news.findMany({
+    select: { category: true },
+    distinct: ["category"],
+    where: { category: { not: "" } },
+  });
+
+  let existingCategories = categoryRecords.map((c) => c.category);
+  if (existingCategories.length === 0) {
+    existingCategories = ["General", "Salud", "Educación", "Obras"];
+  }
+
   const initialData = existingNews
     ? {
         id: existingNews.id,
         title: existingNews.title,
         bajada: existingNews.bajada,
         cuerpo: existingNews.cuerpo,
+        category: existingNews.category,
         status: existingNews.published ? ("published" as const) : ("draft" as const),
         imageUrl: existingNews.image,
       }
@@ -27,6 +40,7 @@ export default async function NewsEditorPage({ searchParams }: EditorPageProps) 
         title: "",
         bajada: "",
         cuerpo: "",
+        category: existingCategories[0],
         status: "draft" as const,
         imageUrl: null,
       };
@@ -52,7 +66,7 @@ export default async function NewsEditorPage({ searchParams }: EditorPageProps) 
       ) : null}
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
-        <NewsEditorForm initialData={initialData} />
+        <NewsEditorForm initialData={initialData} existingCategories={existingCategories} />
       </div>
 
       <Link href="/admin/noticias" className="inline-flex text-sm font-semibold text-sky-700 hover:text-sky-800">

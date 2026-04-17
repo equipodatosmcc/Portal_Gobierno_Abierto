@@ -13,4 +13,5 @@ export type HomeWebContentItem = {
   slug: string;
   title: string;
   content: string;
+  icon?: string | null;
 };

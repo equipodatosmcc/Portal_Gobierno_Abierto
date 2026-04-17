@@ -1,10 +1,14 @@
 import Link from "next/link";
+import * as LucideIcons from "lucide-react";
 import { Scale, FileSearch, Landmark, Wallet } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
 import { HomeWebContentItem } from "@/app/components/ui/home-types";
 
 type TransparencySectionProps = {
-  contents: HomeWebContentItem[];
+  contents: {
+    main: { title: string; content: string } | null;
+    cards: HomeWebContentItem[];
+  };
 };
 
 type IconType = typeof Scale;
@@ -39,13 +43,19 @@ const fallbackItems: FallbackItem[] = [
 ];
 
 export function TransparencySection({ contents }: TransparencySectionProps) {
-  const normalized = contents.slice(0, 4).map((content, index) => ({
-    title: content.title,
-    text: content.content.slice(0, 120).trimEnd() + (content.content.length > 120 ? "..." : ""),
-    icon: fallbackItems[index]?.icon ?? FileSearch,
-  }));
+  const normalized = contents.cards.map((content, index) => {
+    const IconComponent = (LucideIcons as any)[content.icon || ""] || LucideIcons.FileSearch;
+    return {
+      title: content.title,
+      text: content.content.slice(0, 120).trimEnd() + (content.content.length > 120 ? "..." : ""),
+      icon: IconComponent,
+    };
+  });
 
   const items = normalized.length > 0 ? normalized : fallbackItems;
+
+  const mainTitle = contents.main?.title || "Gestion abierta y transparente";
+  const mainText = contents.main?.content || "Creemos en una gestion municipal donde cada ciudadano pueda acceder a la informacion publica de manera simple y directa. Conoce como se administran los recursos de nuestra ciudad.";
 
   return (
     <section id="transparencia" className="py-24">
@@ -54,14 +64,15 @@ export function TransparencySection({ contents }: TransparencySectionProps) {
           <div>
             <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-primary">Transparencia</p>
             <h2 className="mb-6 font-heading text-4xl text-foreground md:text-5xl">
-              Gestion abierta y transparente
+              {mainTitle}
             </h2>
             <p className="mb-8 leading-relaxed text-muted-foreground">
-              Creemos en una gestion municipal donde cada ciudadano pueda acceder a la informacion publica de
-              manera simple y directa. Conoce como se administran los recursos de nuestra ciudad.
+              {mainText}
             </p>
             <Link
-              href="/docs"
+              href="https://datos.ciudaddecorrientes.gov.ar/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-all hover:brightness-110"
             >
               Conocer mas

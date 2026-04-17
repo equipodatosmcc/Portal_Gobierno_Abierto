@@ -14,6 +14,7 @@ export type NewsEditorData = {
   title: string;
   bajada: string;
   cuerpo: string;
+  category: string;
   published: boolean;
   image: string | null;
 };
@@ -45,6 +46,7 @@ export async function getNewsById(id: number) {
     title: item.title,
     bajada: contentParts.bajada,
     cuerpo: contentParts.cuerpo,
+    category: item.category,
     published: item.published,
     image: item.image,
   } as NewsEditorData;

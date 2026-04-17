@@ -56,15 +56,17 @@ export function HeroSection() {
             Portal de Datos <ExternalLink size={16} aria-hidden="true" />
           </Link>
         </div>
-      </Container>
 
-      <Link
-        href="#stats"
-        className="absolute bottom-24 left-1/2 z-20 -translate-x-1/2 animate-bounce text-white/80"
-        aria-label="Ir a la seccion de estadisticas"
-      >
-        <ArrowDown size={28} aria-hidden="true" />
-      </Link>
+        <div className="mt-16 sm:mt-24 flex justify-center animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
+          <Link
+            href="#stats"
+            className="animate-bounce text-white/80"
+            aria-label="Ir a la seccion de estadisticas"
+          >
+            <ArrowDown size={28} aria-hidden="true" />
+          </Link>
+        </div>
+      </Container>
     </section>
   );
 }

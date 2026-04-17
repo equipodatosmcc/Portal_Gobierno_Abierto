@@ -2,28 +2,36 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Home, FileText, PenTool, LayoutTemplate } from "lucide-react";
 
 const navItems = [
   {
     href: "/admin",
     label: "Inicio",
     description: "Resumen y accesos rápidos",
-    icon: "IN",
+    icon: <Home size={16} />,
     isActive: (pathname: string) => pathname === "/admin",
   },
   {
     href: "/admin/noticias",
     label: "Noticias",
     description: "Listado y estado editorial",
-    icon: "NT",
+    icon: <FileText size={16} />,
     isActive: (pathname: string) => pathname === "/admin/noticias",
   },
   {
     href: "/admin/noticias/editor",
     label: "Nueva noticia",
     description: "Crear o editar contenido",
-    icon: "ED",
+    icon: <PenTool size={16} />,
     isActive: (pathname: string) => pathname === "/admin/noticias/editor",
+  },
+  {
+    href: "/admin/contenido",
+    label: "Contenido Web",
+    description: "Gestionar textos de la web",
+    icon: <LayoutTemplate size={16} />,
+    isActive: (pathname: string) => pathname.startsWith("/admin/contenido"),
   },
 ];
 

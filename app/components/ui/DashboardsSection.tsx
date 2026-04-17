@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Area,
@@ -270,6 +270,15 @@ const dashboards: DashboardConfig[] = [
 
 function ChartContent({ dashboard, compact }: { dashboard: DashboardConfig; compact?: boolean }) {
   const height = compact ? 140 : 350;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div style={{ height: height, width: "100%" }} />;
+  }
 
   if (dashboard.chartType === "pie") {
     const pieData = compact ? dashboard.miniData : dashboard.fullData;

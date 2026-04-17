@@ -5,6 +5,7 @@ type WebContentRecord = {
   slug: string;
   title: string;
   content: string;
+  icon: string | null;
   published: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -27,6 +28,7 @@ export type CreateWebContentInput = {
   slug: string;
   title: string;
   content: string;
+  icon?: string | null;
   published: boolean;
 };
 
@@ -34,6 +36,7 @@ export type UpdateWebContentInput = {
   slug?: string;
   title?: string;
   content?: string;
+  icon?: string | null;
   published?: boolean;
 };
 
