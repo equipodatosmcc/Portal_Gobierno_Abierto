@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -9,6 +9,8 @@ import {
   RefreshCw,
   Send,
 } from "lucide-react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
+import { createCitizenMessageAction } from "@/actions/citizen";
 import { Container } from "@/app/components/ui/Container";
 
 type RequestType = "nuevo_dataset" | "actualizar_dataset" | "reclamo" | "sugerencia";
@@ -60,7 +62,11 @@ export function FeedbackSection() {
   const [selectedType, setSelectedType] = useState<RequestType | "">("");
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState<FeedbackForm>(initialForm);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
 
   useEffect(() => {
     return () => {
@@ -77,13 +83,39 @@ export function FeedbackSection() {
       return;
     }
 
-    setSubmitted(true);
+    if (!turnstileToken) {
+      setErrorMsg("Completá la verificación de seguridad antes de enviar.");
+      return;
+    }
 
-    timeoutRef.current = setTimeout(() => {
-      setSubmitted(false);
-      setSelectedType("");
-      setForm(initialForm);
-    }, 3500);
+    setErrorMsg(null);
+
+    startTransition(async () => {
+      const result = await createCitizenMessageAction({
+        type: selectedType,
+        name: form.nombre,
+        email: form.email,
+        subject: form.asunto,
+        message: form.mensaje,
+        dataset: form.dataset || undefined,
+        turnstileToken,
+      });
+
+      if (!result.ok) {
+        setErrorMsg(result.error);
+        turnstileRef.current?.reset();
+        setTurnstileToken(null);
+        return;
+      }
+
+      setSubmitted(true);
+      timeoutRef.current = setTimeout(() => {
+        setSubmitted(false);
+        setSelectedType("");
+        setForm(initialForm);
+        setTurnstileToken(null);
+      }, 3500);
+    });
   };
 
   return (
@@ -225,11 +257,26 @@ export function FeedbackSection() {
                   />
                 </div>
 
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                  onSuccess={setTurnstileToken}
+                  onError={() => setTurnstileToken(null)}
+                  onExpire={() => setTurnstileToken(null)}
+                />
+
+                {errorMsg ? (
+                  <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                    {errorMsg}
+                  </p>
+                ) : null}
+
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-3 font-semibold text-primary-foreground transition-colors hover:bg-gov-cyan-light"
+                  disabled={isPending || !turnstileToken}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-3 font-semibold text-primary-foreground transition-colors hover:bg-gov-cyan-light disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Enviar solicitud <Send size={16} aria-hidden="true" />
+                  {isPending ? "Enviando..." : "Enviar solicitud"} <Send size={16} aria-hidden="true" />
                 </button>
               </form>
             ) : null}

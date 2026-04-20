@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add *)",
+      "Bash(mkdir -p \"c:\\\\Users\\\\spruy\\\\OneDrive\\\\Desktop\\\\Trabajo\\\\Gobierno Abierto\\\\app\\\\admin\\\\mensajes\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\spruy\\\\OneDrive\\\\Desktop\\\\Trabajo\\\\Gobierno Abierto\\\\app\\\\api\\\\admin\\\\mensajes\\\\export\")"
+    ]
+  }
+}

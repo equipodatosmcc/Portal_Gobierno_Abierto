@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FileText, PenTool, LayoutTemplate } from "lucide-react";
+import { Home, FileText, PenTool, LayoutTemplate, MessageSquare } from "lucide-react";
 
 const navItems = [
   {
@@ -32,6 +32,13 @@ const navItems = [
     description: "Gestionar textos de la web",
     icon: <LayoutTemplate size={16} />,
     isActive: (pathname: string) => pathname.startsWith("/admin/contenido"),
+  },
+  {
+    href: "/admin/mensajes",
+    label: "Mensajes",
+    description: "Bandeja del Buzón ciudadano",
+    icon: <MessageSquare size={16} />,
+    isActive: (pathname: string) => pathname.startsWith("/admin/mensajes"),
   },
 ];
 

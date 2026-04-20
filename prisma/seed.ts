@@ -72,7 +72,60 @@ async function loadLegacyNews(): Promise<LegacyNewsItem[]> {
 }
 
 async function main() {
+
   console.log("🌱 Iniciando seed...");
+  // --- WebContent Transparencia ---
+  const transparenciaContent = [
+    {
+      slug: "transparencia-main",
+      title: "Gestion abierta y transparente",
+      content:
+        "Creemos en una gestion municipal donde cada ciudadano pueda acceder a la informacion publica de manera simple y directa. Conoce como se administran los recursos de nuestra ciudad.",
+      published: true,
+    },
+    {
+      slug: "transparencia-card-1",
+      title: "Presupuesto Abierto",
+      content: "Consulta la ejecucion presupuestaria de la Municipalidad en tiempo real.",
+      published: true,
+    },
+    {
+      slug: "transparencia-card-2",
+      title: "Compras y Contrataciones",
+      content: "Licitaciones publicas, ordenes de compra y proveedores adjudicados.",
+      published: true,
+    },
+    {
+      slug: "transparencia-card-3",
+      title: "Normativa Municipal",
+      content: "Ordenanzas, decretos y resoluciones del Honorable Concejo Deliberante.",
+      published: true,
+    },
+    {
+      slug: "transparencia-card-4",
+      title: "Obras Publicas",
+      content: "Estado de avance de las obras de infraestructura municipal.",
+      published: true,
+    },
+  ];
+
+  for (const item of transparenciaContent) {
+    await prisma.webContent.upsert({
+      where: { slug: item.slug },
+      update: {
+        title: item.title,
+        content: item.content,
+        published: item.published,
+      },
+      create: {
+        slug: item.slug,
+        title: item.title,
+        content: item.content,
+        published: item.published,
+      },
+    });
+  }
+  console.log("✅ WebContent Transparencia creado/actualizado");
 
   const passwordHash = await bcrypt.hash("admin123", 12);
 

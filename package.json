@@ -14,6 +14,7 @@
   "private": true,
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
+    "@marsidev/react-turnstile": "^1.5.0",
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.5.0",
     "bcrypt": "^6.0.0",
@@ -22,6 +23,7 @@
     "lucide-react": "^1.8.0",
     "next": "^16.2.0",
     "next-auth": "^4.24.13",
+    "papaparse": "^5.5.3",
     "pg": "^8.20.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -32,6 +34,7 @@
     "@tailwindcss/postcss": "^4.2.2",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^25.5.0",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "dotenv-cli": "^11.0.0",
