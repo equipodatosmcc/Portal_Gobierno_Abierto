@@ -2,7 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, Plus, Trash2 } from "lucide-react";
+import { Save, Loader2, Plus, Trash2, FileText, BarChart2, Users, Globe } from "lucide-react";
+
+const PRESET_ICONS = [
+  { name: "FileText", label: "Documentos", Icon: FileText },
+  { name: "BarChart2", label: "Estadísticas", Icon: BarChart2 },
+  { name: "Users", label: "Ciudadanos", Icon: Users },
+  { name: "Globe", label: "Datos abiertos", Icon: Globe },
+];
 import { updateTransparencyContent } from "./actions";
 
 type WebContentItem = {
@@ -143,10 +150,31 @@ export function EditorForm({ items }: Props) {
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-500">Icono (Lucide)</label>
+                    <label className="mb-1 block text-xs font-medium text-slate-500">Icono</label>
+                    <div className="mb-2 grid grid-cols-4 gap-1.5">
+                      {PRESET_ICONS.map(({ name, label, Icon }) => {
+                        const isActive = item.icon === name;
+                        return (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => handleCardChange(index, "icon", name)}
+                            className={`flex flex-col items-center gap-1 rounded-lg border px-1 py-2 text-[10px] transition ${
+                              isActive
+                                ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                                : "border-slate-200 bg-slate-50 text-slate-500 hover:border-emerald-300 hover:bg-emerald-50"
+                            }`}
+                          >
+                            <Icon size={16} />
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mb-1 text-[10px] text-slate-400">O ingresa un icono personalizado (Lucide):</p>
                     <input
                       type="text"
-                      placeholder="Ej: Wallet, FileSearch, Scale..."
+                      placeholder="Ej: Shield, Landmark, Scale..."
                       value={item.icon || ""}
                       onChange={(e) => handleCardChange(index, "icon", e.target.value)}
                       className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
