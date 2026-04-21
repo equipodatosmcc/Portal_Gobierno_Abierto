@@ -8,6 +8,7 @@ import { SkipLink } from "@/app/components/ui/SkipLink";
 import { StatsSection } from "@/app/components/ui/StatsSection";
 import { TransparencySection } from "@/app/components/ui/TransparencySection";
 import { HomeNewsItem, HomeWebContentItem } from "@/app/components/ui/home-types";
+import { getArboladoData } from "@/lib/data/ckanService";
 import { findManyNews } from "@/lib/services/news";
 import { findManyWebContent } from "@/lib/services/webcontent";
 
@@ -30,9 +31,10 @@ type WebContentRecord = {
 };
 
 async function getHomeData() {
-  const [newsRecords, contentRecords] = await Promise.all([
+  const [newsRecords, contentRecords, arboladoData] = await Promise.all([
     findManyNews({ onlyPublished: true }).catch(() => []),
     findManyWebContent({ onlyPublished: true }).catch(() => []),
+    getArboladoData(),
   ]);
 
   const news = (newsRecords as NewsRecord[]).slice(0, 12).map((item) => ({
@@ -66,11 +68,11 @@ async function getHomeData() {
     })),
   };
 
-  return { news, transparencyContent };
+  return { news, transparencyContent, arboladoData };
 }
 
 export default async function Home() {
-  const { news, transparencyContent } = await getHomeData();
+  const { news, transparencyContent, arboladoData } = await getHomeData();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -84,7 +86,7 @@ export default async function Home() {
           citizensReached="380K"
           reportsCount={Math.max(45, transparencyContent.cards.length * 10)}
         />
-        <DashboardsSection />
+        <DashboardsSection arboladoData={arboladoData} />
         <TransparencySection contents={transparencyContent} />
         <NewsSection news={news} />
         <FeedbackSection />
