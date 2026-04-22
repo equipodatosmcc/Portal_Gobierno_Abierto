@@ -31,5 +31,5 @@ function ensureEnvLocal() {
 console.log("[setup] Iniciando bootstrap del proyecto...");
 ensureEnvLocal();
 run("pnpm", ["install"]);
-run("docker", ["compose", "up", "-d"]);
+run("docker", ["compose", "up", "-d", "db_gobierno_abierto"]);
 console.log("[setup] Listo. Ejecuta: pnpm dev");

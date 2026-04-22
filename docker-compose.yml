@@ -1,17 +1,57 @@
-version: '3.8'
-
 services:
   db_gobierno_abierto:
     image: postgres:15-alpine
     container_name: postgres_gobierno_abierto
-    restart: always
-    env_file:
-      - .env.local
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gobierno_abierto_db}
+      POSTGRES_USER: ${POSTGRES_USER:-admin_portal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
     volumes:
       - pgdata_gobierno:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin_portal} -d ${POSTGRES_DB:-gobierno_abierto_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gobierno_internal
+
+  app_gobierno_abierto:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app_gobierno_abierto
+    restart: unless-stopped
+    depends_on:
+      db_gobierno_abierto:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Gobierno Abierto}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-1x0000000000000000000000000000000AA}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin_portal}:${POSTGRES_PASSWORD:-change_me}@db_gobierno_abierto:5432/${POSTGRES_DB:-gobierno_abierto_db}?schema=public
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads_news:/app/public/uploads/news
+    networks:
+      - gobierno_internal
 
 volumes:
   pgdata_gobierno:
     name: pgdata_gobierno
+  uploads_news:
+    name: uploads_news_gobierno
+
+networks:
+  gobierno_internal:
+    name: gobierno_internal
+    driver: bridge
