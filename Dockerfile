@@ -37,8 +37,10 @@ COPY --from=builder --chown=nextjs:nextjs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nextjs /app/public ./public
 COPY --from=builder --chown=nextjs:nextjs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nextjs /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder --chown=nextjs:nextjs /app/lib ./lib
+COPY --from=builder --chown=nextjs:nextjs /app/data ./data
 
 EXPOSE 3000
 USER nextjs
 
-CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm start"]
+CMD ["sh", "-c", "pnpm prisma migrate deploy && if [ \"${RUN_DB_SEED:-false}\" = \"true\" ]; then pnpm tsx prisma/seed.ts; fi && pnpm start"]
