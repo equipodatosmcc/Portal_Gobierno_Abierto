@@ -1,8 +1,21 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { Role } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcrypt";
-import prisma from "../lib/prisma";
+
+function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error("DATABASE_URL no está definido");
+  }
+
+  const adapter = new PrismaPg({ connectionString });
+  return new PrismaClient({ adapter });
+}
+
+const prisma = createPrismaClient();
 
 type LegacyNewsItem = {
   id: number;
