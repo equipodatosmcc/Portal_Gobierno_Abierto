@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "Portal de Gobierno Abierto | Municipalidad de Corrientes",
   description:
     "Transparencia, participacion ciudadana y datos abiertos al servicio de los correntinos.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

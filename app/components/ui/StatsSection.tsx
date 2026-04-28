@@ -1,31 +1,28 @@
-import { Database, Users, FileText, BarChart3 } from "lucide-react";
+import { Database, Newspaper, BarChart3 } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
 
 type StatsSectionProps = {
   datasetsCount: number;
   dashboardsCount: number;
-  citizensReached: string;
-  reportsCount: number;
+  newsCount: number;
 };
 
 export function StatsSection({
   datasetsCount,
   dashboardsCount,
-  citizensReached,
-  reportsCount,
+  newsCount,
 }: StatsSectionProps) {
   const stats = [
     { icon: Database, value: `${datasetsCount}+`, label: "Datasets Publicados" },
     { icon: BarChart3, value: `${dashboardsCount}`, label: "Tableros Interactivos" },
-    { icon: Users, value: citizensReached, label: "Ciudadanos Alcanzados" },
-    { icon: FileText, value: `${reportsCount}`, label: "Informes Publicos" },
+    { icon: Newspaper, value: `${newsCount}`, label: "Noticias Publicadas" },
   ];
 
   return (
     <section id="stats" className="relative -mt-16 z-20">
       <Container>
         <h2 className="sr-only">Indicadores principales</h2>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((stat, index) => (
             <article
               key={stat.label}

@@ -2,33 +2,34 @@
 
 :root {
   color-scheme: light;
-  --background: 0 0% 96%;
+  --background: 0 0% 97%;
   --foreground: 0 0% 9%;
 
-  --card: 0 0% 98%;
+  --card: 0 0% 100%;
   --card-foreground: 0 0% 9%;
 
-  --primary: 161 93% 30%;
-  --primary-foreground: 151 80% 95%;
+  /* Verde institucional Muni Corrientes #009A44 */
+  --primary: 146 100% 30%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 0 0% 32%;
+  --secondary: 0 0% 12%;
   --secondary-foreground: 0 0% 98%;
 
   --muted: 0 0% 63%;
   --muted-foreground: 0 0% 34%;
 
-  --accent: 166 76% 96%;
-  --accent-foreground: 173 80% 30%;
+  --accent: 146 60% 94%;
+  --accent-foreground: 146 100% 25%;
 
-  --border: 0 0% 83%;
-  --input: 0 0% 83%;
-  --ring: 161 93% 30%;
+  --border: 0 0% 85%;
+  --input: 0 0% 85%;
+  --ring: 146 100% 30%;
 
-  --gov-cyan-light: 200 65% 45%;
-  --gov-dark: 200 25% 15%;
-  --gov-dark-light: 200 20% 32%;
-  --gov-green: 152 60% 42%;
-  --gov-warm: 200 15% 96%;
+  --gov-cyan-light: 146 80% 38%;
+  --gov-dark: 0 0% 10%;
+  --gov-dark-light: 0 0% 22%;
+  --gov-green: 146 100% 30%;
+  --gov-warm: 120 10% 96%;
 }
 
 @theme {
@@ -89,10 +90,10 @@ section[id] {
 }
 
 .text-gradient-cyan {
-  background: linear-gradient(135deg, hsl(152 60% 55%), hsl(161 80% 45%));
+  background: linear-gradient(135deg, hsl(146 100% 45%), hsl(146 90% 35%));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px hsla(161 80% 35% / 0.4));
+  filter: drop-shadow(0 2px 4px hsla(146 100% 25% / 0.4));
 }
 
 .animate-fade-in-up {

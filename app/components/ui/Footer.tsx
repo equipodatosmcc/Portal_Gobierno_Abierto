@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
@@ -8,11 +9,14 @@ export function Footer() {
       <Container className="py-16">
         <div className="grid gap-12 md:grid-cols-3">
           <div>
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
-                C
-              </div>
-              <p className="font-heading text-lg">Gobierno Abierto</p>
+            <div className="mb-4">
+              <Image
+                src="/LOGO VERTICAL.png"
+                alt="Municipalidad de Corrientes - La ciudad que queremos"
+                width={140}
+                height={94}
+                className="h-20 w-auto"
+              />
             </div>
             <p className="text-sm leading-relaxed text-secondary-foreground/80">
               Portal de Gobierno Abierto de la Municipalidad de la Ciudad de Corrientes. Transparencia,

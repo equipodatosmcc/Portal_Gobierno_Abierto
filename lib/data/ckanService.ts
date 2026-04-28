@@ -72,3 +72,24 @@ export async function getArboladoData(): Promise<ArboladoData> {
     return EMPTY_DATA;
   }
 }
+
+export async function getCKANDatasetsCount(): Promise<number> {
+  try {
+    const res = await fetch(
+      "https://datos.ciudaddecorrientes.gov.ar/api/3/action/package_search?rows=0",
+      { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) {
+      console.error(`[ckanService] HTTP ${res.status} fetching datasets count`);
+      return 0;
+    }
+    const json = (await res.json()) as {
+      success: boolean;
+      result: { count: number };
+    };
+    return json.success ? (json.result.count ?? 0) : 0;
+  } catch (err) {
+    console.error("[ckanService] Failed to fetch datasets count:", err);
+    return 0;
+  }
+}

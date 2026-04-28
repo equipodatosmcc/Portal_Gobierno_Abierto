@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
-  AlertTriangle,
   CheckCircle2,
   Lightbulb,
   MessageSquarePlus,
@@ -13,7 +12,7 @@ import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { createCitizenMessageAction } from "@/actions/citizen";
 import { Container } from "@/app/components/ui/Container";
 
-type RequestType = "nuevo_dataset" | "actualizar_dataset" | "reclamo" | "sugerencia";
+type RequestType = "nuevo_dataset" | "actualizar_dataset" | "sugerencia";
 
 type FeedbackForm = {
   nombre: string;
@@ -35,12 +34,6 @@ const requestTypes = [
     label: "Actualizar dataset existente",
     icon: RefreshCw,
     description: "Solicita actualizar un dataset con datos desactualizados.",
-  },
-  {
-    value: "reclamo" as const,
-    label: "Reclamo o error en datos",
-    icon: AlertTriangle,
-    description: "Reporta un error, inconsistencia o problema en un dataset publicado.",
   },
   {
     value: "sugerencia" as const,
@@ -138,7 +131,7 @@ export function FeedbackSection() {
           </div>
         ) : (
           <>
-            <div className="mb-10 grid gap-4 sm:grid-cols-2">
+            <div className="mb-10 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
               {requestTypes.map((type) => (
                 <button
                   key={type.value}
@@ -208,7 +201,7 @@ export function FeedbackSection() {
                   </div>
                 </div>
 
-                {selectedType === "actualizar_dataset" || selectedType === "reclamo" ? (
+                {selectedType === "actualizar_dataset" ? (
                   <div>
                     <label htmlFor="fb-dataset" className="mb-1.5 block text-sm font-medium text-foreground">
                       Nombre del dataset

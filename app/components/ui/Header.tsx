@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Menu, X, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -32,12 +33,16 @@ export function Header() {
     >
       <Container className="flex h-16 items-center justify-between">
         <Link href="#inicio" className="flex items-center gap-3" aria-label="Ir al inicio">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-lg font-bold text-white shadow-md">
-            C
-          </div>
+          <Image
+            src="/LA MUNI - BLANCO.png"
+            alt="La Muni - Municipalidad de Corrientes"
+            width={88}
+            height={52}
+            className="h-9 w-auto"
+            priority
+          />
           <div className="hidden sm:block">
-            <p className="font-heading text-lg leading-tight text-white">Gobierno Abierto</p>
-            <p className="text-xs text-white/70">Ciudad de Corrientes</p>
+            <p className="text-xs font-medium text-white/70">Portal de Gobierno Abierto</p>
           </div>
         </Link>
 

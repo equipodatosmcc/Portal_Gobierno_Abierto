@@ -8,7 +8,9 @@ import { SkipLink } from "@/app/components/ui/SkipLink";
 import { StatsSection } from "@/app/components/ui/StatsSection";
 import { TransparencySection } from "@/app/components/ui/TransparencySection";
 import { HomeNewsItem, HomeWebContentItem } from "@/app/components/ui/home-types";
-import { getArboladoData } from "@/lib/data/ckanService";
+import { parseNewsContent } from "@/app/admin/noticias/content-format";
+import { getArboladoData, getCKANDatasetsCount } from "@/lib/data/ckanService";
+import { buildDashboards } from "@/lib/data/dashboards";
 import { findManyNews } from "@/lib/services/news";
 import { findManyWebContent } from "@/lib/services/webcontent";
 
@@ -32,21 +34,25 @@ type WebContentRecord = {
 };
 
 async function getHomeData() {
-  const [newsRecords, contentRecords, arboladoData] = await Promise.all([
+  const [newsRecords, contentRecords, arboladoData, datasetsCount] = await Promise.all([
     findManyNews({ onlyPublished: true }).catch(() => []),
     findManyWebContent({ onlyPublished: true }).catch(() => []),
     getArboladoData(),
+    getCKANDatasetsCount(),
   ]);
 
-  const news = (newsRecords as NewsRecord[]).slice(0, 12).map((item) => ({
-    id: item.id,
-    title: item.title,
-    content: item.content,
-    excerpt: item.content.replace(/\s+/g, " ").trim().slice(0, 170),
-    tag: item.category,
-    image: item.image,
-    createdAt: item.updatedAt.toISOString(),
-  }));
+  const news = (newsRecords as NewsRecord[]).slice(0, 12).map((item) => {
+    const { bajada, cuerpo } = parseNewsContent(item.content);
+    return {
+      id: item.id,
+      title: item.title,
+      content: cuerpo,
+      excerpt: bajada || cuerpo.replace(/\s+/g, " ").trim().slice(0, 170),
+      tag: item.category,
+      image: item.image,
+      createdAt: item.updatedAt.toISOString(),
+    };
+  });
 
   const transparencyRecords = (contentRecords as WebContentRecord[]).filter((c) =>
     c.slug.startsWith("transparencia-")
@@ -69,11 +75,12 @@ async function getHomeData() {
     })),
   };
 
-  return { news, transparencyContent, arboladoData };
+  return { news, newsCount: newsRecords.length, transparencyContent, arboladoData, datasetsCount };
 }
 
 export default async function Home() {
-  const { news, transparencyContent, arboladoData } = await getHomeData();
+  const { news, newsCount, transparencyContent, arboladoData, datasetsCount } = await getHomeData();
+  const dashboardsCount = buildDashboards(arboladoData).length;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -82,10 +89,9 @@ export default async function Home() {
       <main id="main-content" aria-label="Contenido principal del portal">
         <HeroSection />
         <StatsSection
-          datasetsCount={120}
-          dashboardsCount={15}
-          citizensReached="380K"
-          reportsCount={Math.max(45, transparencyContent.cards.length * 10)}
+          datasetsCount={datasetsCount}
+          dashboardsCount={dashboardsCount}
+          newsCount={newsCount}
         />
         <DashboardsSection arboladoData={arboladoData} />
         <TransparencySection contents={transparencyContent} />
