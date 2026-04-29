@@ -7,23 +7,21 @@ on:
 
 jobs:
   deploy:
-    # 1. Esto le dice a GitHub que use tu servidor de la muni
     runs-on: self-hosted
 
     steps:
-      # 2. El agente descarga el código nuevo directamente en la VM
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 3. Ejecutamos los comandos de Docker directamente (sin SSH)
       - name: Execute Deploy
         run: |
-          # Asegurate de que esta sea la ruta correcta en tu server
-          cd ~/Portal_Gobierno_Abierto
+          # Esta es la nueva ubicación donde movimos la carpeta
+          cd /home/deployer/Portal_Gobierno_Abierto
 
           git pull origin main
 
-          docker compose --env-file .env.server build app_gobierno_abierto
-          docker compose --env-file .env.server up -d app_gobierno_abierto
+          # Usamos sudo para asegurar la ejecución del build
+          sudo docker compose --env-file .env.server build app_gobierno_abierto
+          sudo docker compose --env-file .env.server up -d app_gobierno_abierto
 
-          docker image prune -f
+          sudo docker image prune -f
