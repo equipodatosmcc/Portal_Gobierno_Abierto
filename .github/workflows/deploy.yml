@@ -1,6 +1,5 @@
 name: Deploy Portal Gobierno Abierto
 
-# 1. ¿Cuándo se ejecuta? Cuando hagas un "push" a la rama main
 on:
   push:
     branches:
@@ -8,31 +7,23 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # 1. Esto le dice a GitHub que use tu servidor de la muni
+    runs-on: self-hosted
+
     steps:
-      # 2. Descarga el código en el servidor temporal de GitHub
+      # 2. El agente descarga el código nuevo directamente en la VM
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 3. Se conecta a tu servidor de Corrientes por SSH
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            # Entramos a la carpeta del proyecto
-            cd ~/Portal_Gobierno_Abierto
+      # 3. Ejecutamos los comandos de Docker directamente (sin SSH)
+      - name: Execute Deploy
+        run: |
+          # Asegurate de que esta sea la ruta correcta en tu server
+          cd ~/Portal_Gobierno_Abierto
 
-            # Bajamos los cambios nuevos del repo
-            git pull origin main
+          git pull origin main
 
-            # Construimos la imagen nueva (esto usa tu .env.server)
-            docker compose --env-file .env.server build app_gobierno_abierto
+          docker compose --env-file .env.server build app_gobierno_abierto
+          docker compose --env-file .env.server up -d app_gobierno_abierto
 
-            # Levantamos el contenedor nuevo
-            docker compose --env-file .env.server up -d app_gobierno_abierto
-
-            # Limpiamos imágenes viejas que ya no se usan para no llenar el disco
-            docker image prune -f
+          docker image prune -f
