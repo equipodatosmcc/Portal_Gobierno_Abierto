@@ -1,0 +1,38 @@
+name: Deploy Portal Gobierno Abierto
+
+# 1. ¿Cuándo se ejecuta? Cuando hagas un "push" a la rama main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 2. Descarga el código en el servidor temporal de GitHub
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 3. Se conecta a tu servidor de Corrientes por SSH
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Entramos a la carpeta del proyecto
+            cd ~/Portal_Gobierno_Abierto
+
+            # Bajamos los cambios nuevos del repo
+            git pull origin main
+
+            # Construimos la imagen nueva (esto usa tu .env.server)
+            docker compose --env-file .env.server build app_gobierno_abierto
+
+            # Levantamos el contenedor nuevo
+            docker compose --env-file .env.server up -d app_gobierno_abierto
+
+            # Limpiamos imágenes viejas que ya no se usan para no llenar el disco
+            docker image prune -f

@@ -1,8 +1,8 @@
-import Link from "next/link";
-import * as LucideIcons from "lucide-react";
-import { Scale, FileSearch, Landmark, Wallet } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
 import { HomeWebContentItem } from "@/app/components/ui/home-types";
+import * as LucideIcons from "lucide-react";
+import { FileSearch, Landmark, Scale, Wallet } from "lucide-react";
+import Link from "next/link";
 
 type TransparencySectionProps = {
   contents: {
@@ -55,7 +55,9 @@ export function TransparencySection({ contents }: TransparencySectionProps) {
   const items = normalized.length > 0 ? normalized : fallbackItems;
 
   const mainTitle = contents.main?.title || "Gestion abierta y transparente";
-  const mainText = contents.main?.content || "Creemos en una gestion municipal donde cada ciudadano pueda acceder a la informacion publica de manera simple y directa. Conoce como se administran los recursos de nuestra ciudad.";
+  const mainText =
+    contents.main?.content ||
+    "Creemos en una gestión municipal donde cada ciudadano pueda acceder a la información pública de manera simple y directa. Conoce cómo se administran los recursos de nuestra ciudad.";
 
   return (
     <section id="transparencia" className="py-24">
@@ -63,12 +65,8 @@ export function TransparencySection({ contents }: TransparencySectionProps) {
         <div className="grid items-center gap-16 lg:grid-cols-2">
           <div>
             <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-primary">Transparencia</p>
-            <h2 className="mb-6 font-heading text-4xl text-foreground md:text-5xl">
-              {mainTitle}
-            </h2>
-            <p className="mb-8 leading-relaxed text-muted-foreground">
-              {mainText}
-            </p>
+            <h2 className="mb-6 font-heading text-4xl text-foreground md:text-5xl">{mainTitle}</h2>
+            <p className="mb-8 leading-relaxed text-muted-foreground">{mainText}</p>
             <Link
               href="https://datos.ciudaddecorrientes.gov.ar/"
               target="_blank"
