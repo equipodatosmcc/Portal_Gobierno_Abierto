@@ -7,6 +7,7 @@ on:
 
 jobs:
   deploy:
+    # Usamos tu servidor de la muni como ejecutor
     runs-on: self-hosted
 
     steps:
@@ -15,13 +16,16 @@ jobs:
 
       - name: Execute Deploy
         run: |
-          # Esta es la nueva ubicación donde movimos la carpeta
+          # 1. Entramos a la carpeta en el home de deployer
           cd /home/deployer/Portal_Gobierno_Abierto
 
-          git pull origin main
+          # 2. Forzamos que el servidor se iguale a GitHub (evita errores de 'unmerged files')
+          git fetch origin main
+          git reset --hard origin/main
 
-          # Usamos sudo para asegurar la ejecución del build
+          # 3. Build y deploy con Docker usando el archivo de entorno del server
           sudo docker compose --env-file .env.server build app_gobierno_abierto
           sudo docker compose --env-file .env.server up -d app_gobierno_abierto
 
+          # 4. Limpieza de imágenes para no llenar el disco de la VM
           sudo docker image prune -f
