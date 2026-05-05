@@ -7,10 +7,10 @@ import { NewsSection } from "@/app/components/ui/NewsSection";
 import { SkipLink } from "@/app/components/ui/SkipLink";
 import { StatsSection } from "@/app/components/ui/StatsSection";
 import { TransparencySection } from "@/app/components/ui/TransparencySection";
-import { HomeNewsItem, HomeWebContentItem } from "@/app/components/ui/home-types";
 import { parseNewsContent } from "@/app/admin/noticias/content-format";
 import { getArboladoData, getCKANDatasetsCount } from "@/lib/data/ckanService";
 import { buildDashboards } from "@/lib/data/dashboards";
+import { getSessionManager } from "@/lib/content-auth";
 import { findManyNews } from "@/lib/services/news";
 import { findManyWebContent } from "@/lib/services/webcontent";
 
@@ -46,6 +46,7 @@ async function getHomeData() {
     return {
       id: item.id,
       title: item.title,
+      bajada,
       content: cuerpo,
       excerpt: bajada || cuerpo.replace(/\s+/g, " ").trim().slice(0, 170),
       tag: item.category,
@@ -79,7 +80,10 @@ async function getHomeData() {
 }
 
 export default async function Home() {
-  const { news, newsCount, transparencyContent, arboladoData, datasetsCount } = await getHomeData();
+  const [{ news, newsCount, transparencyContent, arboladoData, datasetsCount }, manager] = await Promise.all([
+    getHomeData(),
+    getSessionManager(),
+  ]);
   const dashboardsCount = buildDashboards(arboladoData).length;
 
   return (
@@ -95,7 +99,7 @@ export default async function Home() {
         />
         <DashboardsSection arboladoData={arboladoData} />
         <TransparencySection contents={transparencyContent} />
-        <NewsSection news={news} />
+        <NewsSection news={news} canEditNews={Boolean(manager)} />
         <FeedbackSection />
       </main>
       <Footer />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState, type FormEvent } from "react";
+import { useActionState, useEffect, useMemo, useState, type FormEvent } from "react";
 import Image from "next/image";
 import { saveNewsAction, type NewsEditorState } from "../actions";
 
@@ -48,9 +48,30 @@ function validateFormData(formData: FormData): ClientFieldErrors {
   return errors;
 }
 
+function buildExcerpt(bajada: string, cuerpo: string) {
+  const trimmedBajada = bajada.trim();
+  if (trimmedBajada) {
+    return trimmedBajada;
+  }
+
+  const plain = cuerpo.replace(/\s+/g, " ").trim();
+  if (!plain) {
+    return "Completá la noticia para ver un extracto.";
+  }
+
+  if (plain.length <= 160) {
+    return plain;
+  }
+
+  return `${plain.slice(0, 157)}...`;
+}
+
 export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFormProps) {
   const [state, formAction, isPending] = useActionState(saveNewsAction, initialActionState);
   const [clientErrors, setClientErrors] = useState<ClientFieldErrors>({});
+  const [title, setTitle] = useState(initialData.title);
+  const [bajada, setBajada] = useState(initialData.bajada);
+  const [cuerpo, setCuerpo] = useState(initialData.cuerpo);
 
   const isInitialCategoryExisting = initialData.category ? existingCategories.includes(initialData.category) : true;
   
@@ -58,8 +79,23 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
   const [selectedCategory, setSelectedCategory] = useState(
     !isInitialCategoryExisting ? "" : (initialData.category || existingCategories[0])
   );
+  const [newCategory, setNewCategory] = useState(!isInitialCategoryExisting ? (initialData.category ?? "") : "");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(initialData.imageUrl ?? null);
 
   const mergedErrors = useMemo(() => ({ ...state.fieldErrors, ...clientErrors }), [clientErrors, state.fieldErrors]);
+
+  const previewCategory = (isNewCategory ? newCategory.trim() : selectedCategory) || "Sin categoria";
+  const previewTitle = title.trim() || "Titulo de la noticia";
+  const previewCuerpo = cuerpo.trim();
+  const previewExcerpt = buildExcerpt(bajada, cuerpo);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     const formData = new FormData(event.currentTarget);
@@ -84,7 +120,8 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
           id="title"
           name="title"
           type="text"
-          defaultValue={initialData.title}
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
           placeholder="Título de la noticia"
           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition-colors focus-visible:border-sky-600 focus-visible:ring-4 focus-visible:ring-sky-100"
           required
@@ -100,7 +137,8 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
         <textarea
           id="bajada"
           name="bajada"
-          defaultValue={initialData.bajada}
+          value={bajada}
+          onChange={(event) => setBajada(event.target.value)}
           placeholder="Resumen breve para la portada"
           className="min-h-24 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition-colors focus-visible:border-sky-600 focus-visible:ring-4 focus-visible:ring-sky-100"
           required
@@ -116,7 +154,8 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
         <textarea
           id="cuerpo"
           name="cuerpo"
-          defaultValue={initialData.cuerpo}
+          value={cuerpo}
+          onChange={(event) => setCuerpo(event.target.value)}
           placeholder="Desarrollo completo de la noticia"
           className="min-h-48 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition-colors focus-visible:border-sky-600 focus-visible:ring-4 focus-visible:ring-sky-100"
           required
@@ -136,6 +175,17 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
             type="file"
             accept="image/jpeg,image/png,image/webp"
             className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (imagePreviewUrl?.startsWith("blob:")) {
+                URL.revokeObjectURL(imagePreviewUrl);
+              }
+              if (!file) {
+                setImagePreviewUrl(initialData.imageUrl ?? null);
+                return;
+              }
+              setImagePreviewUrl(URL.createObjectURL(file));
+            }}
           />
           {mergedErrors.image ? <p className="text-xs font-medium text-red-600">{mergedErrors.image}</p> : null}
           <p className="text-xs text-slate-500">Formatos permitidos: JPG, PNG o WEBP. Tamaño máximo 5MB.</p>
@@ -152,6 +202,7 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
               if (e.target.value === "NEW_CATEGORY_ACTION") {
                 setIsNewCategory(true);
                 setSelectedCategory("");
+                setNewCategory("");
               } else {
                 setIsNewCategory(false);
                 setSelectedCategory(e.target.value);
@@ -177,7 +228,8 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
               placeholder="Nueva categoría..."
               required
               className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus-visible:border-sky-600 focus-visible:ring-4 focus-visible:ring-sky-100"
-              defaultValue={!isInitialCategoryExisting ? initialData.category : ""}
+              value={newCategory}
+              onChange={(event) => setNewCategory(event.target.value)}
             />
           )}
         </div>
@@ -210,6 +262,48 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
           />
         </div>
       ) : null}
+
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="h-2 rounded-t-2xl bg-linear-to-r from-secondary via-primary to-gov-green" aria-hidden="true" />
+        <div className="p-6">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              {previewCategory}
+            </span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Vista previa</span>
+          </div>
+          <h3 className="mb-4 font-heading text-2xl text-slate-900 md:text-3xl">{previewTitle}</h3>
+          {imagePreviewUrl ? (
+            <div className="mb-5 overflow-hidden rounded-2xl border border-slate-200">
+              <Image
+                src={imagePreviewUrl}
+                alt="Vista previa de la imagen principal"
+                width={960}
+                height={540}
+                sizes="(min-width: 768px) 700px, 100vw"
+                className="h-56 w-full object-cover md:h-72"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div className="mb-5 flex h-48 w-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">
+              Sin imagen principal
+            </div>
+          )}
+          <p className="mb-5 text-sm text-slate-600 md:text-base">{previewExcerpt}</p>
+          {previewCuerpo ? (
+            <div className="prose prose-sm max-w-none text-slate-700 md:prose-base">
+              {previewCuerpo.split("\n\n").map((paragraph, index) => (
+                <p key={`preview-${index}`} className="mb-4 leading-relaxed">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">El cuerpo de la noticia se mostrara aqui.</p>
+          )}
+        </div>
+      </section>
 
       {state.status === "error" && state.message ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
