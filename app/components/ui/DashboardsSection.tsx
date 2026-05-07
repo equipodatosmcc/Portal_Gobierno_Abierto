@@ -19,6 +19,60 @@ import { buildDashboards, type DashboardConfig, type DashboardKey } from "@/lib/
 
 const PAGE_SIZE = 3;
 
+const TOOLS = [
+  {
+    name: "Looker Studio",
+    url: "https://lookerstudio.google.com/",
+    description: "Tableros gratuitos conectados a hojas de cálculo, CSV o bases de datos. Sin instalación.",
+    badge: "Gratis",
+    color: "bg-blue-500",
+  },
+  {
+    name: "Google Sheets",
+    url: "https://sheets.google.com/",
+    description: "Gráficos rápidos y compartibles directamente desde una hoja de cálculo con los datos descargados.",
+    badge: "Gratis",
+    color: "bg-green-500",
+  },
+  {
+    name: "Datawrapper",
+    url: "https://www.datawrapper.de/",
+    description: "Editor web para gráficos y mapas listos para publicación. Muy usado en periodismo de datos.",
+    badge: "Gratis",
+    color: "bg-blue-600",
+  },
+  {
+    name: "Flourish",
+    url: "https://flourish.studio/",
+    description: "Visualizaciones animadas e historias de datos interactivas, sin necesidad de código.",
+    badge: "Gratis",
+    color: "bg-indigo-500",
+  },
+  {
+    name: "Power BI",
+    url: "https://powerbi.microsoft.com/",
+    description: "Plataforma de Microsoft para análisis y dashboards avanzados. Versión desktop gratuita.",
+    badge: "Freemium",
+    color: "bg-yellow-500",
+  },
+  {
+    name: "Tableau Public",
+    url: "https://public.tableau.com/",
+    description: "Versión gratuita de Tableau para crear y publicar visualizaciones online.",
+    badge: "Gratis",
+    color: "bg-orange-600",
+  },
+];
+
+function ToolIcon({ name, color }: { name: string; color: string }) {
+  const initials = name.split(" ").map(w => w[0]).join("");
+  return (
+    <div className={`flex h-7 w-7 items-center justify-center rounded text-xs font-bold text-white ${color}`}>
+      {initials}
+    </div>
+  );
+}
+
 function CompactChart({ data }: { data: ChartBar[] }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -99,15 +153,16 @@ export function DashboardsSection({ arboladoData }: Props) {
             Tableros de Datos
           </h2>
           <p className="mx-auto max-w-xl text-muted-foreground">
-            Explora las visualizaciones interactivas elaboradas junto a las secretarías municipales con datos de{" "}
+            Ejemplos construidos a partir de datasets del{" "}
             <Link
               href="https://datos.ciudaddecorrientes.gov.ar/"
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-primary underline underline-offset-2 hover:text-gov-cyan-light"
             >
-              datos.ciudaddecorrientes.gov.ar
+              Portal de Datos Abiertos
             </Link>
+            . Mostramos qué información puede extraerse de los datos crudos y cómo cualquier persona puede reutilizarlos.
           </p>
         </div>
 
@@ -223,15 +278,45 @@ export function DashboardsSection({ arboladoData }: Props) {
               </>
             )}
 
-            <div className="mt-12 text-center">
-              <Link
-                href="https://datos.ciudaddecorrientes.gov.ar/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-secondary px-8 py-3 font-semibold text-secondary-foreground transition-colors hover:bg-gov-dark-light"
-              >
-                Ir al Portal de Datos Abiertos <ExternalLink size={16} aria-hidden="true" />
-              </Link>
+            <div className="mt-12 border-t border-border pt-10">
+              <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="font-heading text-2xl text-foreground">
+                    Herramientas para crear tus propios tableros
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Descargá cualquier dataset y analizalo con estas herramientas. La mayoría son gratuitas.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {TOOLS.map((tool) => (
+                  <a
+                    key={tool.name}
+                    href={tool.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-3">
+                      <ToolIcon name={tool.name} color={tool.color} />
+                      <span className="flex-1 font-heading text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {tool.name}
+                      </span>
+                      <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                        {tool.badge}
+                      </span>
+                    </div>
+                    <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
+                      {tool.description}
+                    </p>
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary transition-all group-hover:gap-2">
+                      Visitar sitio <ExternalLink size={13} aria-hidden="true" />
+                    </span>
+                  </a>
+                ))}
+              </div>
             </div>
           </>
         )}

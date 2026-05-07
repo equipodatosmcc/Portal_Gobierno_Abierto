@@ -97,9 +97,9 @@ export default async function Home() {
           dashboardsCount={dashboardsCount}
           newsCount={newsCount}
         />
-        <DashboardsSection arboladoData={arboladoData} />
-        <TransparencySection contents={transparencyContent} />
         <NewsSection news={news} canEditNews={Boolean(manager)} />
+        <TransparencySection contents={transparencyContent} />
+        <DashboardsSection arboladoData={arboladoData} />
         <FeedbackSection />
       </main>
       <Footer />

@@ -1,3 +1,6 @@
+"use client";
+
+import Link from "next/link";
 import { Database, Newspaper, BarChart3 } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
 
@@ -13,9 +16,9 @@ export function StatsSection({
   newsCount,
 }: StatsSectionProps) {
   const stats = [
-    { icon: Database, value: `${datasetsCount}+`, label: "Datasets Publicados" },
-    { icon: BarChart3, value: `${dashboardsCount}`, label: "Tableros Interactivos" },
-    { icon: Newspaper, value: `${newsCount}`, label: "Noticias Publicadas" },
+    { icon: Database, value: `${datasetsCount}+`, label: "Datasets Publicados", href: "https://datos.ciudaddecorrientes.gov.ar/", external: true },
+    { icon: BarChart3, value: `${dashboardsCount}`, label: "Tableros Interactivos", href: "#tableros" },
+    { icon: Newspaper, value: `${newsCount}`, label: "Noticias Publicadas", href: "#novedades" },
   ];
 
   return (
@@ -24,8 +27,11 @@ export function StatsSection({
         <h2 className="sr-only">Indicadores principales</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((stat, index) => (
-            <article
+            <Link
               key={stat.label}
+              href={stat.href}
+              target={stat.external ? "_blank" : undefined}
+              rel={stat.external ? "noopener noreferrer" : undefined}
               className="animate-count-up group rounded-xl border border-border bg-card p-6 text-center shadow-lg transition-all duration-300 ease-out hover:-translate-y-1 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -38,7 +44,7 @@ export function StatsSection({
                 {stat.value}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-            </article>
+            </Link>
           ))}
         </div>
       </Container>

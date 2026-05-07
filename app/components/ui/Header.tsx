@@ -7,12 +7,11 @@ import { useEffect, useState } from "react";
 import { Container } from "@/app/components/ui/Container";
 
 const navItems = [
-  { label: "Inicio", href: "#inicio" },
-  { label: "Portal de Datos", href: "https://datos.ciudaddecorrientes.gov.ar/", external: true },
-  { label: "Tableros", href: "#tableros" },
-  { label: "Transparencia", href: "#transparencia" },
   { label: "Novedades", href: "#novedades" },
+  { label: "Transparencia", href: "#transparencia" },
+  { label: "Tableros", href: "#tableros" },
   { label: "Feedback", href: "#feedback" },
+  { label: "Portal de Datos", href: "https://datos.ciudaddecorrientes.gov.ar/", external: true },
 ];
 
 export function Header() {
@@ -41,9 +40,6 @@ export function Header() {
             className="h-9 w-auto"
             priority
           />
-          <div className="hidden sm:block">
-            <p className="text-xs font-medium text-white/70">Portal de Gobierno Abierto</p>
-          </div>
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Navegacion principal">
