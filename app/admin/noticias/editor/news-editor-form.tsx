@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useState, type FormEvent } from "react";
 import Image from "next/image";
 import { saveNewsAction, type NewsEditorState } from "../actions";
+import { RichTextEditor } from "@/app/components/ui/RichTextEditor";
 
 type NewsEditorFormProps = {
   initialData: {
@@ -21,18 +22,22 @@ const initialActionState: NewsEditorState = { status: "idle" };
 
 type ClientFieldErrors = Partial<Record<"title" | "bajada" | "cuerpo" | "image", string>>;
 
+function stripHtml(html: string) {
+  return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
+}
+
 function validateFormData(formData: FormData): ClientFieldErrors {
   const errors: ClientFieldErrors = {};
 
   const title = String(formData.get("title") ?? "").trim();
-  const bajada = String(formData.get("bajada") ?? "").trim();
-  const cuerpo = String(formData.get("cuerpo") ?? "").trim();
+  const bajadaHtml = String(formData.get("bajada") ?? "").trim();
+  const cuerpoHtml = String(formData.get("cuerpo") ?? "").trim();
   const fileValue = formData.get("image");
   const file = fileValue instanceof File && fileValue.size > 0 ? fileValue : null;
 
   if (title.length < 5) errors.title = "El título debe tener al menos 5 caracteres.";
-  if (bajada.length < 10) errors.bajada = "La bajada debe tener al menos 10 caracteres.";
-  if (cuerpo.length < 20) errors.cuerpo = "El cuerpo debe tener al menos 20 caracteres.";
+  if (stripHtml(bajadaHtml).length < 10) errors.bajada = "La bajada debe tener al menos 10 caracteres.";
+  if (stripHtml(cuerpoHtml).length < 20) errors.cuerpo = "El cuerpo debe tener al menos 20 caracteres.";
 
   if (file) {
     const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -49,12 +54,12 @@ function validateFormData(formData: FormData): ClientFieldErrors {
 }
 
 function buildExcerpt(bajada: string, cuerpo: string) {
-  const trimmedBajada = bajada.trim();
+  const trimmedBajada = stripHtml(bajada);
   if (trimmedBajada) {
     return trimmedBajada;
   }
 
-  const plain = cuerpo.replace(/\s+/g, " ").trim();
+  const plain = stripHtml(cuerpo);
   if (!plain) {
     return "Completá la noticia para ver un extracto.";
   }
@@ -131,36 +136,16 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="bajada" className="text-sm font-semibold text-slate-700">
-          Bajada
-        </label>
-        <textarea
-          id="bajada"
-          name="bajada"
-          value={bajada}
-          onChange={(event) => setBajada(event.target.value)}
-          placeholder="Resumen breve para la portada"
-          className="min-h-24 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition-colors focus-visible:border-sky-600 focus-visible:ring-4 focus-visible:ring-sky-100"
-          required
-          minLength={10}
-        />
+        <label className="text-sm font-semibold text-slate-700">Bajada</label>
+        <input type="hidden" name="bajada" value={bajada} />
+        <RichTextEditor value={bajada} onChange={setBajada} minHeight="min-h-24" />
         {mergedErrors.bajada ? <p className="text-xs font-medium text-red-600">{mergedErrors.bajada}</p> : null}
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="cuerpo" className="text-sm font-semibold text-slate-700">
-          Cuerpo
-        </label>
-        <textarea
-          id="cuerpo"
-          name="cuerpo"
-          value={cuerpo}
-          onChange={(event) => setCuerpo(event.target.value)}
-          placeholder="Desarrollo completo de la noticia"
-          className="min-h-48 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition-colors focus-visible:border-sky-600 focus-visible:ring-4 focus-visible:ring-sky-100"
-          required
-          minLength={20}
-        />
+        <label className="text-sm font-semibold text-slate-700">Cuerpo</label>
+        <input type="hidden" name="cuerpo" value={cuerpo} />
+        <RichTextEditor value={cuerpo} onChange={setCuerpo} minHeight="min-h-48" />
         {mergedErrors.cuerpo ? <p className="text-xs font-medium text-red-600">{mergedErrors.cuerpo}</p> : null}
       </div>
 
@@ -292,13 +277,10 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
           )}
           <p className="mb-5 text-sm text-slate-600 md:text-base">{previewExcerpt}</p>
           {previewCuerpo ? (
-            <div className="prose prose-sm max-w-none text-slate-700 md:prose-base">
-              {previewCuerpo.split("\n\n").map((paragraph, index) => (
-                <p key={`preview-${index}`} className="mb-4 leading-relaxed">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
+            <div
+              className="prose prose-sm max-w-none text-slate-700 md:prose-base [&_a]:text-sky-600 [&_a]:underline [&_strong]:text-slate-900"
+              dangerouslySetInnerHTML={{ __html: previewCuerpo }}
+            />
           ) : (
             <p className="text-sm text-slate-400">El cuerpo de la noticia se mostrara aqui.</p>
           )}

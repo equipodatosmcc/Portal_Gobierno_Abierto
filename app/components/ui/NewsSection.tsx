@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Calendar, Pencil } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
 import { HomeNewsItem } from "@/app/components/ui/home-types";
 import { serializeNewsContent } from "@/app/admin/noticias/content-format";
+import { RichTextEditor } from "@/app/components/ui/RichTextEditor";
 
 type NewsSectionProps = {
   news: HomeNewsItem[];
@@ -22,12 +23,16 @@ function formatDate(date: string) {
   }).format(new Date(date));
 }
 
+function stripHtml(html: string) {
+  return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function extractExcerpt(content: string, fallback: string) {
   if (fallback.trim().length > 0) {
     return fallback;
   }
 
-  const plain = content.replace(/\s+/g, " ").trim();
+  const plain = stripHtml(content);
   if (plain.length <= 160) {
     return plain;
   }
@@ -196,11 +201,7 @@ export function NewsSection({
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                           Texto
                         </label>
-                        <textarea
-                          value={draftBody}
-                          onChange={(event) => setDraftBody(event.target.value)}
-                          className="min-h-40 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
-                        />
+                        <RichTextEditor value={draftBody} onChange={setDraftBody} minHeight="min-h-40" />
                       </div>
                       {saveError ? <p className="text-sm text-red-500">{saveError}</p> : null}
                       <div className="flex flex-wrap gap-3">
@@ -245,13 +246,10 @@ export function NewsSection({
                     </div>
                   )}
                   {!isEditing ? (
-                    <div className="prose prose-sm max-w-none md:prose-base">
-                      {active.content.split("\n\n").map((paragraph, index) => (
-                        <p key={`${active.id}-${index}`} className="mb-5 leading-relaxed text-muted-foreground">
-                          {paragraph}
-                        </p>
-                      ))}
-                    </div>
+                    <div
+                      className="prose prose-sm max-w-none text-muted-foreground md:prose-base [&_a]:text-primary [&_a]:underline [&_strong]:text-foreground"
+                      dangerouslySetInnerHTML={{ __html: active.content }}
+                    />
                   ) : null}
                 </div>
               </article>

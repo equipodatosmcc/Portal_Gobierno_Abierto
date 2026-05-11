@@ -5,9 +5,21 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import DOMPurify from "isomorphic-dompurify";
 import { requireSessionManager } from "@/lib/content-auth";
 import { createNews, findManyNews, findNewsById, updateNews } from "@/lib/services/news";
 import { serializeNewsContent } from "./content-format";
+
+const HTML_ALLOWED_TAGS = ["p", "br", "strong", "em", "u", "ul", "ol", "li", "a", "h3", "h4", "blockquote"];
+const HTML_ALLOWED_ATTR = ["href", "target", "rel"];
+
+function sanitizeHtml(html: string) {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: HTML_ALLOWED_TAGS, ALLOWED_ATTR: HTML_ALLOWED_ATTR });
+}
+
+function stripHtml(html: string) {
+  return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
+}
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -132,16 +144,19 @@ export async function saveNewsAction(_: NewsEditorState, formData: FormData): Pr
 
     const fieldErrors: NewsEditorState["fieldErrors"] = {};
 
+    const bajadaText = stripHtml(bajada);
+    const cuerpoText = stripHtml(cuerpo);
+
     if (title.length < 5) fieldErrors.title = "El título debe tener al menos 5 caracteres.";
-    if (bajada.length < 10) fieldErrors.bajada = "La bajada debe tener al menos 10 caracteres.";
-    if (cuerpo.length < 20) fieldErrors.cuerpo = "El cuerpo debe tener al menos 20 caracteres.";
+    if (bajadaText.length < 10) fieldErrors.bajada = "La bajada debe tener al menos 10 caracteres.";
+    if (cuerpoText.length < 20) fieldErrors.cuerpo = "El cuerpo debe tener al menos 20 caracteres.";
 
     if (fieldErrors.title || fieldErrors.bajada || fieldErrors.cuerpo) {
       return buildErrorState("Revisá los datos del formulario.", fieldErrors);
     }
 
     const published = statusValue === "published";
-    const content = serializeNewsContent({ bajada, cuerpo });
+    const content = serializeNewsContent({ bajada: sanitizeHtml(bajada), cuerpo: sanitizeHtml(cuerpo) });
     const id = Number(idRaw);
     const hasId = Number.isInteger(id) && id > 0;
     const uploadedImage = imageInput instanceof File && imageInput.size > 0 ? imageInput : null;

@@ -9,10 +9,3 @@ export type HomeNewsItem = {
   createdAt: string;
 };
 
-export type HomeWebContentItem = {
-  id: number;
-  slug: string;
-  title: string;
-  content: string;
-  icon?: string | null;
-};

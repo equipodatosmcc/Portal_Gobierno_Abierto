@@ -2,15 +2,28 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, Plus, Trash2, FileText, BarChart2, Users, Globe } from "lucide-react";
+import { Save, Loader2, FileText, BarChart2, Users, Globe, Landmark, Scale, MapPin, MessageSquare } from "lucide-react";
+import { RichTextEditor } from "@/app/components/ui/RichTextEditor";
+import { updateGobiernoAbiertoContent } from "./actions";
+
+const SLUG_ORDER = [
+  "gobierno-abierto-intro",
+  "gobierno-abierto-pilares",
+  "gobierno-abierto-corrientes",
+  "gobierno-abierto-ciudadano",
+  "gobierno-abierto-participacion",
+];
 
 const PRESET_ICONS = [
+  { name: "Landmark", label: "Edificio", Icon: Landmark },
+  { name: "Scale", label: "Justicia", Icon: Scale },
+  { name: "MapPin", label: "Lugar", Icon: MapPin },
+  { name: "Users", label: "Ciudadanos", Icon: Users },
+  { name: "MessageSquare", label: "Mensajes", Icon: MessageSquare },
   { name: "FileText", label: "Documentos", Icon: FileText },
   { name: "BarChart2", label: "Estadísticas", Icon: BarChart2 },
-  { name: "Users", label: "Ciudadanos", Icon: Users },
-  { name: "Globe", label: "Datos abiertos", Icon: Globe },
+  { name: "Globe", label: "Datos", Icon: Globe },
 ];
-import { updateTransparencyContent } from "./actions";
 
 type WebContentItem = {
   id?: number;
@@ -25,56 +38,31 @@ type Props = {
 };
 
 export function EditorForm({ items }: Props) {
-  const [mainItem, setMainItem] = useState<WebContentItem>(
-    items.find((i) => i.slug === "transparencia-main") || {
-      slug: "transparencia-main",
-      title: "Gestion abierta y transparente",
-      content: "Creemos en una gestion municipal donde cada ciudadano...",
-    }
-  );
-
-  const [cards, setCards] = useState<WebContentItem[]>(
-    items.filter((i) => i.slug !== "transparencia-main").sort((a, b) => a.slug.localeCompare(b.slug))
-  );
+  const [panels, setPanels] = useState<WebContentItem[]>(() => {
+    return SLUG_ORDER.map((slug) => {
+      const found = items.find((i) => i.slug === slug);
+      return found ?? { slug, title: "", content: "", icon: null };
+    });
+  });
 
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const handleMainChange = (field: "title" | "content", value: string) => {
-    setMainItem((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleCardChange = (index: number, field: "title" | "content" | "icon", value: string) => {
-    setCards((prev) => {
-      const newCards = [...prev];
-      newCards[index] = { ...newCards[index], [field]: value };
-      return newCards;
-    });
-  };
-
-  const handleAddCard = () => {
-    setCards((prev) => [
-      ...prev,
-      {
-        slug: `transparencia-card-${prev.length + 1}`,
-        title: "Nueva Tarjeta",
-        content: "Descripción de la tarjeta...",
-        icon: "FileSearch",
-      },
-    ]);
-  };
-
-  const handleRemoveCard = (index: number) => {
-    setCards((prev) => prev.filter((_, i) => i !== index));
+  const updatePanel = (slug: string, field: "title" | "content" | "icon", value: string) => {
+    setPanels((prev) => prev.map((p) => (p.slug === slug ? { ...p, [field]: value } : p)));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     startTransition(async () => {
-      const result = await updateTransparencyContent(
-        { title: mainItem.title, content: mainItem.content },
-        cards.map((c) => ({ title: c.title, content: c.content, icon: c.icon || null }))
+      const result = await updateGobiernoAbiertoContent(
+        panels.map((p) => ({
+          slug: p.slug,
+          title: p.title,
+          content: p.content,
+          icon: p.icon ?? null,
+        }))
       );
 
       if (result.success) {
@@ -86,129 +74,86 @@ export function EditorForm({ items }: Props) {
     });
   };
 
+  const panelLabels: Record<string, string> = {
+    "gobierno-abierto-intro": "¿Qué es el Gobierno Abierto?",
+    "gobierno-abierto-pilares": "Nuestros Pilares",
+    "gobierno-abierto-corrientes": "Gobierno Abierto en Corrientes",
+    "gobierno-abierto-ciudadano": "¿Para qué te sirve como ciudadano?",
+    "gobierno-abierto-participacion": "Tu participación hace al Portal",
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div>
-        <h3 className="text-xl font-semibold text-slate-900">Sección Transparencia</h3>
-        <p className="text-sm text-slate-500">Edita el título principal, texto y agrega o elimina tarjetas informativas.</p>
+        <h3 className="text-xl font-semibold text-slate-900">Sección Gobierno Abierto</h3>
+        <p className="text-sm text-slate-500">Editá el título, ícono y contenido de cada panel del acordeón.</p>
       </div>
 
       <div className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-          <h4 className="mb-4 text-base font-semibold text-slate-900">Encabezado Principal</h4>
-          <div className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Título</label>
-              <input
-                type="text"
-                required
-                value={mainItem.title}
-                onChange={(e) => handleMainChange("title", e.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Texto descriptivo</label>
-              <textarea
-                required
-                rows={3}
-                value={mainItem.content}
-                onChange={(e) => handleMainChange("content", e.target.value)}
-                className="w-full resize-none rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              />
-            </div>
-          </div>
-        </div>
+        {panels.map((panel) => (
+          <div key={panel.slug} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-widest text-emerald-800">
+              {panelLabels[panel.slug] ?? panel.slug}
+            </h4>
 
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <h4 className="text-base font-semibold text-slate-900">Tarjetas Informativas</h4>
-            <button
-              type="button"
-              onClick={handleAddCard}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 px-3 py-1.5 text-sm font-medium text-emerald-800 transition hover:bg-emerald-200"
-            >
-              <Plus size={16} /> Añadir Tarjeta
-            </button>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            {cards.map((item, index) => (
-              <div key={index} className="relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="mb-4 flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-emerald-800 uppercase tracking-widest">
-                    Tarjeta {index + 1}
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveCard(index)}
-                    className="text-red-500 hover:text-red-700 transition-colors"
-                    aria-label="Eliminar tarjeta"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-500">Icono</label>
-                    <div className="mb-2 grid grid-cols-4 gap-1.5">
-                      {PRESET_ICONS.map(({ name, label, Icon }) => {
-                        const isActive = item.icon === name;
-                        return (
-                          <button
-                            key={name}
-                            type="button"
-                            onClick={() => handleCardChange(index, "icon", name)}
-                            className={`flex flex-col items-center gap-1 rounded-lg border px-1 py-2 text-[10px] transition ${
-                              isActive
-                                ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                                : "border-slate-200 bg-slate-50 text-slate-500 hover:border-emerald-300 hover:bg-emerald-50"
-                            }`}
-                          >
-                            <Icon size={16} />
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <p className="mb-1 text-[10px] text-slate-400">O ingresa un icono personalizado (Lucide):</p>
-                    <input
-                      type="text"
-                      placeholder="Ej: Shield, Landmark, Scale..."
-                      value={item.icon || ""}
-                      onChange={(e) => handleCardChange(index, "icon", e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                    />
-                    <p className="mt-1 text-[10px] text-slate-400">Escribe el nombre del icono en inglés.</p>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-500">Título de la tarjeta</label>
-                    <input
-                      type="text"
-                      required
-                      value={item.title}
-                      onChange={(e) => handleCardChange(index, "title", e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-500">Breve descripción</label>
-                    <textarea
-                      required
-                      rows={2}
-                      value={item.content}
-                      onChange={(e) => handleCardChange(index, "content", e.target.value)}
-                      className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Título del panel</label>
+                <input
+                  type="text"
+                  required
+                  value={panel.title}
+                  onChange={(e) => updatePanel(panel.slug, "title", e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
               </div>
-            ))}
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Ícono</label>
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {PRESET_ICONS.map(({ name, label, Icon }) => {
+                    const isActive = panel.icon === name;
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => updatePanel(panel.slug, "icon", name)}
+                        className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-2 text-[10px] transition ${
+                          isActive
+                            ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-slate-50 text-slate-500 hover:border-emerald-300 hover:bg-emerald-50"
+                        }`}
+                      >
+                        <Icon size={16} />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Ej: Shield, Landmark, Scale..."
+                  value={panel.icon ?? ""}
+                  onChange={(e) => updatePanel(panel.slug, "icon", e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
+                <p className="mt-1 text-[10px] text-slate-400">Nombre de ícono Lucide (en inglés).</p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Contenido</label>
+                <RichTextEditor
+                  value={panel.content}
+                  onChange={(html) => updatePanel(panel.slug, "content", html)}
+                  minHeight="min-h-36"
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
       </div>
-      
-      <div className="flex justify-end pt-4 border-t border-slate-200">
+
+      <div className="flex justify-end border-t border-slate-200 pt-4">
         <button
           type="submit"
           disabled={isPending}

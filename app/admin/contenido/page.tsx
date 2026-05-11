@@ -24,8 +24,8 @@ export default async function ContenidoPage() {
   // Find the published records for the Transparency section
   const contentRecords = await findManyWebContent({ onlyPublished: true });
   
-  const transparencyItems = contentRecords
-    .filter((c) => c.slug.startsWith("transparencia-"))
+  const gobiernoAbiertoItems = contentRecords
+    .filter((c) => c.slug.startsWith("gobierno-abierto-"))
     .map((item) => ({
       id: item.id,
       slug: item.slug,
@@ -44,12 +44,12 @@ export default async function ContenidoPage() {
         </p>
       </header>
 
-      {transparencyItems.length === 0 ? (
+      {gobiernoAbiertoItems.length === 0 ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
-          No se encontraron registros de contenido para la sección Transparencia. Asegúrate de haber inicializado la base de datos con los textos predeterminados.
+          No se encontraron registros para la sección Gobierno Abierto. Ejecutá el seed de la base de datos.
         </div>
       ) : (
-        <EditorForm items={transparencyItems} />
+        <EditorForm items={gobiernoAbiertoItems} />
       )}
     </section>
   );

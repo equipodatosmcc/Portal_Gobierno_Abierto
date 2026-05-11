@@ -2,24 +2,25 @@
 
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
+import DOMPurify from "isomorphic-dompurify";
 import { authOptions } from "@/auth";
 import prisma from "@/lib/prisma";
 
-export type TransparencyMainPayload = {
-  title: string;
-  content: string;
-};
+const ALLOWED_TAGS = ["p", "br", "strong", "em", "u", "ul", "ol", "li", "a", "h3", "h4"];
+const ALLOWED_ATTR = ["href", "target", "rel"];
 
-export type TransparencyCardPayload = {
+function sanitize(html: string) {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR });
+}
+
+export type GobiernoAbiertoPanel = {
+  slug: string;
   title: string;
   content: string;
   icon: string | null;
 };
 
-export async function updateTransparencyContent(
-  main: TransparencyMainPayload,
-  cards: TransparencyCardPayload[]
-) {
+export async function updateGobiernoAbiertoContent(panels: GobiernoAbiertoPanel[]) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
@@ -28,37 +29,22 @@ export async function updateTransparencyContent(
 
   try {
     await prisma.$transaction(async (tx) => {
-      // 1. Update the main text
-      await tx.webContent.upsert({
-        where: { slug: "transparencia-main" },
-        update: { title: main.title, content: main.content, published: true },
-        create: {
-          slug: "transparencia-main",
-          title: main.title,
-          content: main.content,
-          published: true,
-        },
-      });
-
-      // 2. Delete all existing transparency cards
-      await tx.webContent.deleteMany({
-        where: {
-          slug: {
-            startsWith: "transparencia-card-",
-          },
-        },
-      });
-
-      // 3. Insert the new cards with sequential slugs
-      if (cards.length > 0) {
-        await tx.webContent.createMany({
-          data: cards.map((card, index) => ({
-            slug: `transparencia-card-${index + 1}`,
-            title: card.title,
-            content: card.content,
-            icon: card.icon || "FileSearch", // default fallback
+      for (const panel of panels) {
+        await tx.webContent.upsert({
+          where: { slug: panel.slug },
+          update: {
+            title: panel.title,
+            content: sanitize(panel.content),
+            icon: panel.icon,
             published: true,
-          })),
+          },
+          create: {
+            slug: panel.slug,
+            title: panel.title,
+            content: sanitize(panel.content),
+            icon: panel.icon,
+            published: true,
+          },
         });
       }
     });
@@ -67,7 +53,7 @@ export async function updateTransparencyContent(
     revalidatePath("/admin/contenido");
     return { success: true };
   } catch (error) {
-    console.error("Error updating web content:", error);
+    console.error("Error updating gobierno abierto content:", error);
     return { success: false, error: "Ocurrió un error al guardar los cambios." };
   }
 }

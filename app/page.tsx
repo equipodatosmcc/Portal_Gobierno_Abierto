@@ -6,7 +6,7 @@ import { HeroSection } from "@/app/components/ui/HeroSection";
 import { NewsSection } from "@/app/components/ui/NewsSection";
 import { SkipLink } from "@/app/components/ui/SkipLink";
 import { StatsSection } from "@/app/components/ui/StatsSection";
-import { TransparencySection } from "@/app/components/ui/TransparencySection";
+import { GobiernoAbiertoSection } from "@/app/components/ui/GobiernoAbiertoSection";
 import { parseNewsContent } from "@/app/admin/noticias/content-format";
 import { getArboladoData, getCKANDatasetsCount } from "@/lib/data/ckanService";
 import { buildDashboards } from "@/lib/data/dashboards";
@@ -41,46 +41,33 @@ async function getHomeData() {
     getCKANDatasetsCount(),
   ]);
 
+  const stripHtml = (html: string) => html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
+
   const news = (newsRecords as NewsRecord[]).slice(0, 12).map((item) => {
     const { bajada, cuerpo } = parseNewsContent(item.content);
+    const bajadaText = stripHtml(bajada);
+    const cuerpoText = stripHtml(cuerpo);
     return {
       id: item.id,
       title: item.title,
       bajada,
       content: cuerpo,
-      excerpt: bajada || cuerpo.replace(/\s+/g, " ").trim().slice(0, 170),
+      excerpt: bajadaText || cuerpoText.slice(0, 170),
       tag: item.category,
       image: item.image,
       createdAt: item.updatedAt.toISOString(),
     };
   });
 
-  const transparencyRecords = (contentRecords as WebContentRecord[]).filter((c) =>
-    c.slug.startsWith("transparencia-")
-  );
+  const gobiernoAbiertoItems = (contentRecords as WebContentRecord[])
+    .filter((c) => c.slug.startsWith("gobierno-abierto-"))
+    .map((item) => ({ id: item.id, slug: item.slug, title: item.title, content: item.content, icon: item.icon }));
 
-  const mainRecord = transparencyRecords.find((c) => c.slug === "transparencia-main");
-  const cardsRecords = transparencyRecords
-    .filter((c) => c.slug !== "transparencia-main")
-    .sort((a, b) => a.slug.localeCompare(b.slug))
-    .slice(0, 4);
-
-  const transparencyContent = {
-    main: mainRecord ? { title: mainRecord.title, content: mainRecord.content } : null,
-    cards: cardsRecords.map((item) => ({
-      id: item.id,
-      slug: item.slug,
-      title: item.title,
-      content: item.content,
-      icon: item.icon,
-    })),
-  };
-
-  return { news, newsCount: newsRecords.length, transparencyContent, arboladoData, datasetsCount };
+  return { news, newsCount: newsRecords.length, gobiernoAbiertoItems, arboladoData, datasetsCount };
 }
 
 export default async function Home() {
-  const [{ news, newsCount, transparencyContent, arboladoData, datasetsCount }, manager] = await Promise.all([
+  const [{ news, newsCount, gobiernoAbiertoItems, arboladoData, datasetsCount }, manager] = await Promise.all([
     getHomeData(),
     getSessionManager(),
   ]);
@@ -97,8 +84,8 @@ export default async function Home() {
           dashboardsCount={dashboardsCount}
           newsCount={newsCount}
         />
+        <GobiernoAbiertoSection items={gobiernoAbiertoItems} />
         <NewsSection news={news} canEditNews={Boolean(manager)} />
-        <TransparencySection contents={transparencyContent} />
         <DashboardsSection arboladoData={arboladoData} />
         <FeedbackSection />
       </main>
