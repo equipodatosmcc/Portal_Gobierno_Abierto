@@ -11,7 +11,7 @@ export function Footer() {
           <div>
             <div className="mb-4">
               <Image
-                src="/LOGO VERTICAL.png"
+                src="/LA MUNI - BLANCO.png"
                 alt="Municipalidad de Corrientes - La ciudad que queremos"
                 width={140}
                 height={94}

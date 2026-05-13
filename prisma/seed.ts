@@ -93,45 +93,33 @@ async function main() {
   });
 
   // --- WebContent Gobierno Abierto ---
+  await prisma.webContent.deleteMany({
+    where: { slug: { in: ["gobierno-abierto-pilares", "gobierno-abierto-ciudadano"] } },
+  });
+
   const gobiernoAbiertoContent = [
     {
       slug: "gobierno-abierto-intro",
       title: "¿Qué es el Gobierno Abierto?",
       icon: "Landmark",
       content:
-        "<p>El Gobierno Abierto es un modelo de gestión que busca transformar la relación entre el Municipio y los vecinos. Se basa en la convicción de que la información pública pertenece a la ciudadanía y que los problemas de la ciudad se resuelven mejor cuando trabajamos juntos. No se trata solo de publicar datos, sino de abrir las puertas de la gestión para que cada correntino tenga una voz activa en el diseño de su comunidad.</p>",
-      published: true,
-    },
-    {
-      slug: "gobierno-abierto-pilares",
-      title: "Nuestros Pilares",
-      icon: "Scale",
-      content:
-        "<p><strong>Transparencia:</strong> Garantizar que la información estratégica de nuestra ciudad —como los indicadores económicos locales, la infraestructura de salud y la movilidad urbana— sea pública, comprensible y esté al alcance de un clic. Este portal es una herramienta dinámica que busca conectar al Municipio con el vecino, democratizando el acceso a la información que nos pertenece a todos.</p><p><strong>Participación Ciudadana:</strong> Crear espacios reales para que los vecinos dejen de ser espectadores y pasen a proponer soluciones, influyendo directamente en las prioridades de sus barrios.</p><p><strong>Colaboración:</strong> Trabajar en equipo con universidades, organizaciones sociales y empresas para usar la tecnología y la creatividad en la mejora de los servicios públicos.</p>",
+        "<p>El Gobierno Abierto es un modelo de gestión que busca transformar la relación entre el Municipio y los vecinos. Se basa en la convicción de que la información pública pertenece a la ciudadanía y que los problemas de la ciudad se resuelven mejor cuando trabajamos juntos. No se trata solo de publicar datos, sino de abrir las puertas de la gestión para que cada correntino tenga una voz activa en el diseño de su comunidad.</p><p><strong>Nuestros Pilares:</strong></p><ul><li><strong>Transparencia:</strong> Garantizar que la información estratégica —como indicadores económicos, infraestructura de salud y movilidad urbana— sea pública, comprensible y esté a un clic de distancia. Democratizamos el acceso a la información que nos pertenece a todos.</li><li><strong>Participación Ciudadana:</strong> Crear espacios reales para que los vecinos dejen de ser espectadores y pasen a proponer soluciones, influyendo en las prioridades de sus barrios.</li><li><strong>Colaboración:</strong> Trabajar en equipo con universidades, organizaciones sociales y empresas para usar la tecnología y la creatividad en la mejora de los servicios públicos.</li></ul>",
       published: true,
     },
     {
       slug: "gobierno-abierto-corrientes",
-      title: "Gobierno Abierto en Corrientes",
+      title: "Corrientes Abierta: El Impacto en tu Día a Día",
       icon: "MapPin",
       content:
-        "<p>Para la Municipalidad de Corrientes, el Gobierno Abierto es un compromiso con la modernización y la honestidad. Somos parte de <strong>OGP Local</strong> (Alianza para el Gobierno Abierto), una red internacional de ciudades que eligen ser transparentes y rendir cuentas a sus habitantes.</p><p><strong>Acciones que ya estamos implementando:</strong></p><ul><li><strong>Apertura de Datos Reales:</strong> Ponemos a disposición información estratégica sobre Economía, Salud, Transporte y Geografía en formatos que podés descargar y reutilizar libremente.</li><li><strong>Co-creación y Escucha:</strong> Implementamos procesos de consulta ciudadana para que los proyectos clave de la ciudad cuenten con el aval y la visión de quienes viven en cada barrio.</li><li><strong>Modernización y Autogestión:</strong> Facilitamos el acceso a trámites y servicios digitales para que la relación con el Municipio sea más simple, rápida y sin vueltas.</li></ul>",
-      published: true,
-    },
-    {
-      slug: "gobierno-abierto-ciudadano",
-      title: "¿Para qué te sirve como ciudadano?",
-      icon: "Users",
-      content:
-        "<p>El Gobierno Abierto es una herramienta para tu día a día:</p><ul><li><strong>Tomar mejores decisiones:</strong> Si sos emprendedor, estudiante o periodista, podés usar los datos del portal para tus proyectos, investigaciones o para analizar el mercado local.</li><li><strong>Cuidar tu barrio:</strong> Podés consultar la ubicación de servicios municipales (SAPS, puntos verdes, centros de atención) y verificar que los recursos lleguen a tu zona.</li><li><strong>Influir en la gestión:</strong> Tu opinión cuenta. A través de este portal, podés ayudarnos a decidir qué capacitaciones traer a los Puntos Digitales o cuáles son las prioridades de infraestructura en tu sector.</li></ul>",
+        "<p>Para la Municipalidad de Corrientes, este modelo es un compromiso con la modernización y la honestidad. Como miembros de <strong>OGP Local</strong> (Alianza para el Gobierno Abierto), no solo abrimos datos, sino que te damos herramientas concretas para tu vida cotidiana:</p><ul><li><strong>Tomar mejores decisiones:</strong> Abrimos información estratégica sobre Economía, Salud y Transporte. Si sos emprendedor, estudiante o periodista, podés usar estos datos para investigar o analizar el mercado local.</li><li><strong>Cuidar tu barrio y gestionar más rápido:</strong> Facilitamos servicios digitales para agilizar tus trámites y te permitimos consultar la ubicación de servicios municipales para verificar que los recursos lleguen a tu zona.</li><li><strong>Influir en la gestión:</strong> A través de nuestras consultas ciudadanas, tu opinión cuenta para decidir, por ejemplo, qué capacitaciones llevar a los Puntos Digitales o priorizar infraestructura en tu sector.</li></ul>",
       published: true,
     },
     {
       slug: "gobierno-abierto-participacion",
-      title: "Tu participación hace al Portal",
+      title: "Co-creá este Portal con Nosotros",
       icon: "MessageSquare",
       content:
-        "<p>Este portal no es una biblioteca estática; es un espacio vivo de conexión. Por eso, hemos sumado una sección de Feedback y Sugerencias diseñada para que seas protagonista del crecimiento de esta plataforma.</p><p><strong>¿Qué podés hacer en la sección de interacción?</strong></p><ul><li><strong>Solicitar nuevos Datasets:</strong> Si necesitás información que aún no está publicada, podés pedir su apertura.</li><li><strong>Actualizar Información:</strong> Ayudanos a mantener los datos al día informándonos sobre cambios o sugerencias de mejora en los registros actuales.</li><li><strong>Enviar Sugerencias:</strong> Danos tu idea para que el portal sea más fácil de usar o para que los datos sean más útiles para tu trabajo o estudio.</li></ul><p>Tu aporte es el motor que nos permite seguir expandiendo el acceso a la información en Corrientes.</p>",
+        "<p>Este portal no es una biblioteca estática; es un espacio vivo de conexión y mejora continua. Hemos sumado una sección de Feedback y Sugerencias para que seas protagonista del crecimiento de esta plataforma.</p><p><strong>¿Qué podés hacer en nuestra sección de interacción?</strong></p><ul><li><strong>Solicitar nuevos Datasets:</strong> Si necesitás información pública que aún no está disponible, podés pedir su apertura.</li><li><strong>Actualizar Información:</strong> Ayudanos a mantener los datos al día informándonos sobre cambios en tu zona o mejoras en los registros.</li><li><strong>Enviar Sugerencias:</strong> Compartí tus ideas para que el portal sea más fácil de usar o para que los datos te resulten más útiles.</li></ul><p>Tu aporte es el motor que nos permite seguir expandiendo el acceso a la información en Corrientes.</p>",
       published: true,
     },
   ];

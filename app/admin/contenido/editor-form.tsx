@@ -2,23 +2,19 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, FileText, BarChart2, Users, Globe, Landmark, Scale, MapPin, MessageSquare } from "lucide-react";
+import { Save, Loader2, FileText, BarChart2, Globe, Landmark, MapPin, MessageSquare } from "lucide-react";
 import { RichTextEditor } from "@/app/components/ui/RichTextEditor";
 import { updateGobiernoAbiertoContent } from "./actions";
 
 const SLUG_ORDER = [
   "gobierno-abierto-intro",
-  "gobierno-abierto-pilares",
   "gobierno-abierto-corrientes",
-  "gobierno-abierto-ciudadano",
   "gobierno-abierto-participacion",
 ];
 
 const PRESET_ICONS = [
   { name: "Landmark", label: "Edificio", Icon: Landmark },
-  { name: "Scale", label: "Justicia", Icon: Scale },
   { name: "MapPin", label: "Lugar", Icon: MapPin },
-  { name: "Users", label: "Ciudadanos", Icon: Users },
   { name: "MessageSquare", label: "Mensajes", Icon: MessageSquare },
   { name: "FileText", label: "Documentos", Icon: FileText },
   { name: "BarChart2", label: "Estadísticas", Icon: BarChart2 },
@@ -76,10 +72,8 @@ export function EditorForm({ items }: Props) {
 
   const panelLabels: Record<string, string> = {
     "gobierno-abierto-intro": "¿Qué es el Gobierno Abierto?",
-    "gobierno-abierto-pilares": "Nuestros Pilares",
-    "gobierno-abierto-corrientes": "Gobierno Abierto en Corrientes",
-    "gobierno-abierto-ciudadano": "¿Para qué te sirve como ciudadano?",
-    "gobierno-abierto-participacion": "Tu participación hace al Portal",
+    "gobierno-abierto-corrientes": "Corrientes Abierta: El Impacto en tu Día a Día",
+    "gobierno-abierto-participacion": "Co-creá este Portal con Nosotros",
   };
 
   return (
