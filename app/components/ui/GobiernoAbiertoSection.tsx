@@ -2,10 +2,12 @@
 
 import React, { useState } from "react";
 import * as LucideIcons from "lucide-react";
-import { Landmark, MapPin, MessageSquare } from "lucide-react";
+import { Landmark, MapPin, MessageSquare, Pencil } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
+import { RichTextEditor } from "@/app/components/ui/RichTextEditor";
 
 type PanelItem = {
+  id: number;
   slug: string;
   title: string;
   content: string;
@@ -14,6 +16,7 @@ type PanelItem = {
 
 type Props = {
   items: PanelItem[];
+  canEdit?: boolean;
 };
 
 const SLUG_ORDER = [
@@ -68,18 +71,21 @@ const DEFAULT_THEME = {
 
 const FALLBACK_CONTENT: PanelItem[] = [
   {
+    id: 0,
     slug: "gobierno-abierto-intro",
     title: "¿Qué es el Gobierno Abierto?",
     content:
       "<p>El Gobierno Abierto es un modelo de gestión que busca transformar la relación entre el Municipio y los vecinos. Se basa en la convicción de que la información pública pertenece a la ciudadanía y que los problemas de la ciudad se resuelven mejor cuando trabajamos juntos. No se trata solo de publicar datos, sino de abrir las puertas de la gestión para que cada correntino tenga una voz activa en el diseño de su comunidad.</p><p><strong>Nuestros Pilares:</strong></p><ul><li><strong>Transparencia:</strong> Garantizar que la información estratégica —como indicadores económicos, infraestructura de salud y movilidad urbana— sea pública, comprensible y esté a un clic de distancia. Democratizamos el acceso a la información que nos pertenece a todos.</li><li><strong>Participación Ciudadana:</strong> Crear espacios reales para que los vecinos dejen de ser espectadores y pasen a proponer soluciones, influyendo en las prioridades de sus barrios.</li><li><strong>Colaboración:</strong> Trabajar en equipo con universidades, organizaciones sociales y empresas para usar la tecnología y la creatividad en la mejora de los servicios públicos.</li></ul>",
   },
   {
+    id: 0,
     slug: "gobierno-abierto-corrientes",
     title: "Corrientes Abierta: El Impacto en tu Día a Día",
     content:
       "<p>Para la Municipalidad de Corrientes, este modelo es un compromiso con la modernización y la honestidad. Como miembros de <strong>OGP Local</strong> (Alianza para el Gobierno Abierto), no solo abrimos datos, sino que te damos herramientas concretas para tu vida cotidiana:</p><ul><li><strong>Tomar mejores decisiones:</strong> Abrimos información estratégica sobre Economía, Salud y Transporte. Si sos emprendedor, estudiante o periodista, podés usar estos datos para investigar o analizar el mercado local.</li><li><strong>Cuidar tu barrio y gestionar más rápido:</strong> Facilitamos servicios digitales para agilizar tus trámites y te permitimos consultar la ubicación de servicios municipales para verificar que los recursos lleguen a tu zona.</li><li><strong>Influir en la gestión:</strong> A través de nuestras consultas ciudadanas, tu opinión cuenta para decidir, por ejemplo, qué capacitaciones llevar a los Puntos Digitales o priorizar infraestructura en tu sector.</li></ul>",
   },
   {
+    id: 0,
     slug: "gobierno-abierto-participacion",
     title: "Co-creá este Portal con Nosotros",
     content:
@@ -87,13 +93,47 @@ const FALLBACK_CONTENT: PanelItem[] = [
   },
 ];
 
-export function GobiernoAbiertoSection({ items }: Props) {
-  const ordered =
+export function GobiernoAbiertoSection({ items, canEdit = false }: Props) {
+  const [panels, setPanels] = useState<PanelItem[]>(
     items.length > 0
-      ? SLUG_ORDER.map((slug) => items.find((i) => i.slug === slug)).filter(Boolean) as PanelItem[]
-      : FALLBACK_CONTENT;
+      ? (SLUG_ORDER.map((slug) => items.find((i) => i.slug === slug)).filter(Boolean) as PanelItem[])
+      : FALLBACK_CONTENT,
+  );
+  const ordered = panels;
 
   const [activeSlug, setActiveSlug] = useState(ordered[0]?.slug ?? "");
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftContent, setDraftContent] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const activePanel = ordered.find((p) => p.slug === activeSlug) ?? null;
+
+  async function handleSave() {
+    if (!activePanel || activePanel.id === 0) return;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const response = await fetch(`/api/webcontent/${activePanel.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: draftTitle.trim(), content: draftContent.trim() }),
+      });
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "No se pudo guardar.");
+      setPanels((current) =>
+        current.map((p) =>
+          p.slug === activeSlug ? { ...p, title: draftTitle.trim(), content: draftContent.trim() } : p,
+        ),
+      );
+      setIsEditing(false);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "No se pudo guardar.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <section id="gobierno-abierto" className="py-24">
@@ -116,7 +156,7 @@ export function GobiernoAbiertoSection({ items }: Props) {
                 <button
                   key={panel.slug}
                   type="button"
-                  onClick={() => setActiveSlug(panel.slug)}
+                  onClick={() => { setActiveSlug(panel.slug); setIsEditing(false); setSaveError(null); }}
                   className={`flex-1 flex items-center gap-3 px-5 py-4 text-left transition-all duration-200 border-l-4 hover:translate-x-1 ${
                     isActive
                       ? `${theme.tabActiveBg} ${theme.tabActiveText} ${theme.tabActiveBorder}`
@@ -148,6 +188,8 @@ export function GobiernoAbiertoSection({ items }: Props) {
                   DEFAULT_ICONS[panel.slug] ??
                   LucideIcons.FileText;
 
+                const isPanelEditing = isActive && isEditing;
+
                 return (
                   <div
                     key={panel.slug}
@@ -159,14 +201,69 @@ export function GobiernoAbiertoSection({ items }: Props) {
                         <PanelIcon size={32} aria-hidden="true" />
                       </span>
                       <h3 className="font-heading text-2xl font-semibold text-white md:text-3xl">{panel.title}</h3>
+                      {canEdit && isActive && panel.id !== 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditing((v) => !v);
+                            setDraftTitle(panel.title);
+                            setDraftContent(panel.content);
+                            setSaveError(null);
+                          }}
+                          className="ml-auto inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/20 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/30"
+                          aria-label={`Editar ${panel.title}`}
+                        >
+                          <Pencil size={12} aria-hidden="true" /> {isPanelEditing ? "Cerrar" : "Editar"}
+                        </button>
+                      ) : null}
                     </div>
-                    <div className="relative rounded-xl bg-accent/50 p-5 md:p-7">
-                      <PanelIcon size={88} className="absolute bottom-4 right-4 opacity-[0.07] text-primary pointer-events-none" aria-hidden="true" />
-                      <div
-                        className="relative prose prose-sm max-w-none md:prose-base [&_a]:text-primary [&_a]:underline [&_strong]:text-foreground [&_p]:text-foreground/80 [&_li]:text-foreground/80"
-                        dangerouslySetInnerHTML={{ __html: panel.content }}
-                      />
-                    </div>
+                    {isPanelEditing ? (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                            Título
+                          </label>
+                          <input
+                            type="text"
+                            value={draftTitle}
+                            onChange={(e) => setDraftTitle(e.target.value)}
+                            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base text-foreground outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                            Contenido
+                          </label>
+                          <RichTextEditor value={draftContent} onChange={setDraftContent} minHeight="min-h-48" />
+                        </div>
+                        {saveError ? <p className="text-sm text-red-500">{saveError}</p> : null}
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-slate-400"
+                          >
+                            {isSaving ? "Guardando…" : "Guardar"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setIsEditing(false); setSaveError(null); }}
+                            className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground transition hover:border-primary/40"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative rounded-xl bg-accent/50 p-5 md:p-7">
+                        <PanelIcon size={88} className="absolute bottom-4 right-4 opacity-[0.07] text-primary pointer-events-none" aria-hidden="true" />
+                        <div
+                          className="relative prose prose-sm max-w-none md:prose-base [&_a]:text-primary [&_a]:underline [&_strong]:text-foreground [&_p]:text-foreground/80 [&_li]:text-foreground/80"
+                          dangerouslySetInnerHTML={{ __html: panel.content }}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}

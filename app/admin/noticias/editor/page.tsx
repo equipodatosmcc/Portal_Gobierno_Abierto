@@ -35,6 +35,7 @@ export default async function NewsEditorPage({ searchParams }: EditorPageProps) 
         category: existingNews.category,
         status: existingNews.published ? ("published" as const) : ("draft" as const),
         imageUrl: existingNews.image,
+        imagePosition: existingNews.imagePosition,
       }
     : {
         title: "",
@@ -43,6 +44,7 @@ export default async function NewsEditorPage({ searchParams }: EditorPageProps) 
         category: existingCategories[0],
         status: "draft" as const,
         imageUrl: null,
+        imagePosition: null,
       };
 
   const isEditing = Boolean(existingNews);

@@ -141,6 +141,7 @@ export async function saveNewsAction(_: NewsEditorState, formData: FormData): Pr
     const statusValue = String(formData.get("status") ?? "draft");
     const imageInput = formData.get("image");
     const category = String(formData.get("category") ?? "General").trim();
+    const imagePosition = String(formData.get("imagePosition") ?? "50% 50%").trim();
 
     const fieldErrors: NewsEditorState["fieldErrors"] = {};
 
@@ -188,6 +189,7 @@ export async function saveNewsAction(_: NewsEditorState, formData: FormData): Pr
         category,
         published,
         image: imagePath,
+        imagePosition,
       });
 
       if (uploadedImage && current.image && current.image !== imagePath) {
@@ -215,6 +217,7 @@ export async function saveNewsAction(_: NewsEditorState, formData: FormData): Pr
         category,
         published,
         image: imagePath,
+        imagePosition,
         authorId: manager.userId,
       });
     }

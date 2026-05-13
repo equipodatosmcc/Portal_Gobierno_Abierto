@@ -35,8 +35,9 @@ model News {
   title       String
   slug        String   @unique
   content     String
-  image       String?  // URL de la foto principal (opcional)
-  category    String   @default("General") // Ej: Salud, Educación, Obras
+  image         String?  // URL de la foto principal (opcional)
+  imagePosition String?  @default("50% 50%") // CSS object-position (ej: "30% 20%")
+  category      String   @default("General") // Ej: Salud, Educación, Obras
   published   Boolean  @default(false)
   
   author      User     @relation(fields: [authorId], references: [id])

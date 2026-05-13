@@ -8,6 +8,7 @@ export type CreateNewsInput = {
   published: boolean;
   authorId: string;
   image?: string | null;
+  imagePosition?: string | null;
 };
 
 export type UpdateNewsInput = {
@@ -17,6 +18,7 @@ export type UpdateNewsInput = {
   category?: string;
   published?: boolean;
   image?: string | null;
+  imagePosition?: string | null;
 };
 
 export async function createNews(data: CreateNewsInput) {

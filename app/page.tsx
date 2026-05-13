@@ -22,6 +22,7 @@ type NewsRecord = {
   content: string;
   category: string;
   image: string | null;
+  imagePosition: string | null;
   updatedAt: Date;
 };
 
@@ -55,6 +56,7 @@ async function getHomeData() {
       excerpt: bajadaText || cuerpoText.slice(0, 170),
       tag: item.category,
       image: item.image,
+      imagePosition: item.imagePosition ?? "50% 50%",
       createdAt: item.updatedAt.toISOString(),
     };
   });
@@ -84,7 +86,7 @@ export default async function Home() {
           dashboardsCount={dashboardsCount}
           newsCount={newsCount}
         />
-        <GobiernoAbiertoSection items={gobiernoAbiertoItems} />
+        <GobiernoAbiertoSection items={gobiernoAbiertoItems} canEdit={Boolean(manager)} />
         <NewsSection news={news} canEditNews={Boolean(manager)} />
         <DashboardsSection arboladoData={arboladoData} />
         <FeedbackSection />

@@ -3,7 +3,8 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
-import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Undo, Redo } from "lucide-react";
+import TextAlign from "@tiptap/extension-text-align";
+import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Undo, Redo, AlignLeft, AlignCenter, AlignRight, AlignJustify } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Props = {
@@ -27,6 +28,7 @@ export function RichTextEditor({ value, onChange, minHeight = "min-h-32" }: Prop
         openOnClick: false,
         HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
       }),
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
     content: value,
     onUpdate({ editor }) {
@@ -75,6 +77,19 @@ export function RichTextEditor({ value, onChange, minHeight = "min-h-32" }: Prop
         <div className="mx-1 w-px self-stretch bg-slate-300" />
         <Btn onClick={addLink} active={editor?.isActive("link") ?? false} title="Agregar enlace">
           <LinkIcon size={14} />
+        </Btn>
+        <div className="mx-1 w-px self-stretch bg-slate-300" />
+        <Btn onClick={() => editor?.chain().focus().setTextAlign("left").run()} active={editor?.isActive({ textAlign: "left" }) ?? false} title="Alinear izquierda">
+          <AlignLeft size={14} />
+        </Btn>
+        <Btn onClick={() => editor?.chain().focus().setTextAlign("center").run()} active={editor?.isActive({ textAlign: "center" }) ?? false} title="Centrar">
+          <AlignCenter size={14} />
+        </Btn>
+        <Btn onClick={() => editor?.chain().focus().setTextAlign("right").run()} active={editor?.isActive({ textAlign: "right" }) ?? false} title="Alinear derecha">
+          <AlignRight size={14} />
+        </Btn>
+        <Btn onClick={() => editor?.chain().focus().setTextAlign("justify").run()} active={editor?.isActive({ textAlign: "justify" }) ?? false} title="Justificar">
+          <AlignJustify size={14} />
         </Btn>
         <div className="mx-1 w-px self-stretch bg-slate-300" />
         <Btn onClick={() => editor?.chain().focus().undo().run()} active={false} title="Deshacer">

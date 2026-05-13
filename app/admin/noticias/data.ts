@@ -17,6 +17,7 @@ export type NewsEditorData = {
   category: string;
   published: boolean;
   image: string | null;
+  imagePosition: string | null;
 };
 
 export async function getNewsList() {
@@ -49,5 +50,6 @@ export async function getNewsById(id: number) {
     category: item.category,
     published: item.published,
     image: item.image,
+    imagePosition: item.imagePosition ?? null,
   } as NewsEditorData;
 }

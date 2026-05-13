@@ -6,6 +6,7 @@ export type HomeNewsItem = {
   excerpt: string;
   tag: string;
   image: string | null;
+  imagePosition: string;
   createdAt: string;
 };
 

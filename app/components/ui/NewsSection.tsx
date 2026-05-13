@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, Calendar, Pencil } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
@@ -52,8 +52,11 @@ export function NewsSection({
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftBody, setDraftBody] = useState("");
+  const [draftImagePosition, setDraftImagePosition] = useState({ x: 50, y: 50 });
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const imageDragState = useRef<{ startX: number; startY: number; posX: number; posY: number } | null>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
 
   const normalizedNews = useMemo(
     () =>
@@ -74,6 +77,36 @@ export function NewsSection({
   const isDetailOpen = active !== null;
   const hasMore = displayCount < normalizedNews.length;
 
+  function parseImagePos(pos: string): { x: number; y: number } {
+    const match = pos.match(/^(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/);
+    if (match) return { x: parseFloat(match[1]), y: parseFloat(match[2]) };
+    return { x: 50, y: 50 };
+  }
+
+  function handleImageMouseDown(event: MouseEvent<HTMLDivElement>) {
+    imageDragState.current = {
+      startX: event.clientX,
+      startY: event.clientY,
+      posX: draftImagePosition.x,
+      posY: draftImagePosition.y,
+    };
+    event.preventDefault();
+  }
+
+  function handleImageMouseMove(event: MouseEvent<HTMLDivElement>) {
+    if (!imageDragState.current || !imageContainerRef.current) return;
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const dx = event.clientX - imageDragState.current.startX;
+    const dy = event.clientY - imageDragState.current.startY;
+    const newX = Math.max(0, Math.min(100, imageDragState.current.posX - (dx / rect.width) * 100));
+    const newY = Math.max(0, Math.min(100, imageDragState.current.posY - (dy / rect.height) * 100));
+    setDraftImagePosition({ x: newX, y: newY });
+  }
+
+  function handleImageMouseUp() {
+    imageDragState.current = null;
+  }
+
   function handleShowMore() {
     setDisplayCount((current) => Math.min(current + incrementBy, normalizedNews.length));
   }
@@ -87,6 +120,7 @@ export function NewsSection({
     setSaveError(null);
 
     try {
+      const imagePositionValue = `${draftImagePosition.x.toFixed(1)}% ${draftImagePosition.y.toFixed(1)}%`;
       const response = await fetch(`/api/news/${active.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -96,6 +130,7 @@ export function NewsSection({
             bajada: active.bajada,
             cuerpo: draftBody.trim(),
           }),
+          imagePosition: imagePositionValue,
         }),
       });
 
@@ -105,6 +140,7 @@ export function NewsSection({
         throw new Error(payload.error || "No se pudo guardar la noticia.");
       }
 
+      const savedImagePosition = `${draftImagePosition.x.toFixed(1)}% ${draftImagePosition.y.toFixed(1)}%`;
       setNewsItems((current) =>
         current.map((item) =>
           item.id === active.id
@@ -113,6 +149,7 @@ export function NewsSection({
                 title: draftTitle.trim(),
                 content: draftBody.trim(),
                 excerpt: item.bajada,
+                imagePosition: savedImagePosition,
               }
             : item,
         ),
@@ -175,6 +212,7 @@ export function NewsSection({
                           setIsEditing((current) => !current);
                           setDraftTitle(active.title);
                           setDraftBody(active.content);
+                          setDraftImagePosition(parseImagePos(active.imagePosition));
                           setSaveError(null);
                         }}
                         className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary transition-colors hover:border-primary/40 hover:bg-primary/20"
@@ -219,6 +257,7 @@ export function NewsSection({
                             setIsEditing(false);
                             setDraftTitle(active.title);
                             setDraftBody(active.content);
+                            setDraftImagePosition(parseImagePos(active.imagePosition));
                             setSaveError(null);
                           }}
                           className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground transition hover:border-primary/40"
@@ -231,14 +270,43 @@ export function NewsSection({
                     <h3 className="mb-6 font-heading text-3xl text-foreground md:text-4xl">{active.title}</h3>
                   )}
                   {active.image ? (
-                    <div className="mb-6 overflow-hidden rounded-2xl border border-border">
-                      <Image
-                        src={active.image}
-                        alt={`Imagen de ${active.title}`}
-                        width={960}
-                        height={540}
-                        className="h-64 w-full object-cover md:h-80"
-                      />
+                    <div className="mb-6 space-y-1">
+                      {isEditing ? (
+                        <div
+                          ref={imageContainerRef}
+                          className="relative cursor-grab overflow-hidden rounded-2xl border border-border active:cursor-grabbing"
+                          onMouseDown={handleImageMouseDown}
+                          onMouseMove={handleImageMouseMove}
+                          onMouseUp={handleImageMouseUp}
+                          onMouseLeave={handleImageMouseUp}
+                        >
+                          <Image
+                            src={active.image}
+                            alt={`Imagen de ${active.title}`}
+                            width={960}
+                            height={540}
+                            className="pointer-events-none h-64 w-full object-cover md:h-80"
+                            style={{ objectPosition: `${draftImagePosition.x.toFixed(1)}% ${draftImagePosition.y.toFixed(1)}%` }}
+                            draggable={false}
+                          />
+                          <div className="pointer-events-none absolute inset-0 flex items-end justify-end p-2">
+                            <span className="rounded-md bg-black/50 px-2 py-1 text-xs text-white">
+                              Arrastrá para reencuadrar
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="overflow-hidden rounded-2xl border border-border">
+                          <Image
+                            src={active.image}
+                            alt={`Imagen de ${active.title}`}
+                            width={960}
+                            height={540}
+                            className="h-64 w-full object-cover md:h-80"
+                            style={{ objectPosition: active.imagePosition }}
+                          />
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="mb-6 flex h-56 w-full items-center justify-center rounded-2xl border border-dashed border-border bg-muted text-sm text-muted-foreground">
@@ -247,7 +315,7 @@ export function NewsSection({
                   )}
                   {!isEditing ? (
                     <div
-                      className="prose prose-sm max-w-none text-muted-foreground md:prose-base [&_a]:text-primary [&_a]:underline [&_strong]:text-foreground"
+                      className="max-w-none text-muted-foreground [&_a]:text-primary [&_a]:underline [&_blockquote]:mb-4 [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic [&_h3]:mb-3 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-foreground [&_h4]:mb-2 [&_h4]:mt-4 [&_h4]:font-semibold [&_h4]:text-foreground [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:text-foreground [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5"
                       dangerouslySetInnerHTML={{ __html: active.content }}
                     />
                   ) : null}
@@ -278,6 +346,7 @@ export function NewsSection({
                       width={640}
                       height={360}
                       className="h-full w-full object-cover"
+                      style={{ objectPosition: item.imagePosition }}
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">

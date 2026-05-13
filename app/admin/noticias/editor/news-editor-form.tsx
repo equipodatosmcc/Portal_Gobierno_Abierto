@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import Image from "next/image";
 import { saveNewsAction, type NewsEditorState } from "../actions";
 import { RichTextEditor } from "@/app/components/ui/RichTextEditor";
@@ -14,6 +14,7 @@ type NewsEditorFormProps = {
     category?: string;
     status: "draft" | "published";
     imageUrl?: string | null;
+    imagePosition?: string | null;
   };
   existingCategories: string[];
 };
@@ -71,12 +72,21 @@ function buildExcerpt(bajada: string, cuerpo: string) {
   return `${plain.slice(0, 157)}...`;
 }
 
+function parseImagePosition(raw: string | null | undefined): { x: number; y: number } {
+  const match = (raw ?? "50% 50%").match(/^(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/);
+  if (match) return { x: parseFloat(match[1]), y: parseFloat(match[2]) };
+  return { x: 50, y: 50 };
+}
+
 export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFormProps) {
   const [state, formAction, isPending] = useActionState(saveNewsAction, initialActionState);
   const [clientErrors, setClientErrors] = useState<ClientFieldErrors>({});
   const [title, setTitle] = useState(initialData.title);
   const [bajada, setBajada] = useState(initialData.bajada);
   const [cuerpo, setCuerpo] = useState(initialData.cuerpo);
+  const [imagePosition, setImagePosition] = useState(() => parseImagePosition(initialData.imagePosition));
+  const dragState = useRef<{ startX: number; startY: number; posX: number; posY: number } | null>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
 
   const isInitialCategoryExisting = initialData.category ? existingCategories.includes(initialData.category) : true;
   
@@ -102,6 +112,30 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
     };
   }, [imagePreviewUrl]);
 
+  function handleImageMouseDown(event: MouseEvent<HTMLDivElement>) {
+    dragState.current = {
+      startX: event.clientX,
+      startY: event.clientY,
+      posX: imagePosition.x,
+      posY: imagePosition.y,
+    };
+    event.preventDefault();
+  }
+
+  function handleImageMouseMove(event: MouseEvent<HTMLDivElement>) {
+    if (!dragState.current || !imageContainerRef.current) return;
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const dx = event.clientX - dragState.current.startX;
+    const dy = event.clientY - dragState.current.startY;
+    const newX = Math.max(0, Math.min(100, dragState.current.posX - (dx / rect.width) * 100));
+    const newY = Math.max(0, Math.min(100, dragState.current.posY - (dy / rect.height) * 100));
+    setImagePosition({ x: newX, y: newY });
+  }
+
+  function handleImageMouseUp() {
+    dragState.current = null;
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     const formData = new FormData(event.currentTarget);
     const errors = validateFormData(formData);
@@ -116,6 +150,7 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
     <form action={formAction} onSubmit={handleSubmit} className="space-y-5" noValidate>
       <input type="hidden" name="id" value={initialData.id ?? ""} />
       <input type="hidden" name="existingImage" value={initialData.imageUrl ?? ""} />
+      <input type="hidden" name="imagePosition" value={`${imagePosition.x.toFixed(1)}% ${imagePosition.y.toFixed(1)}%`} />
 
       <div className="space-y-2">
         <label htmlFor="title" className="text-sm font-semibold text-slate-700">
@@ -259,16 +294,32 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
           </div>
           <h3 className="mb-4 font-heading text-2xl text-slate-900 md:text-3xl">{previewTitle}</h3>
           {imagePreviewUrl ? (
-            <div className="mb-5 overflow-hidden rounded-2xl border border-slate-200">
-              <Image
-                src={imagePreviewUrl}
-                alt="Vista previa de la imagen principal"
-                width={960}
-                height={540}
-                sizes="(min-width: 768px) 700px, 100vw"
-                className="h-56 w-full object-cover md:h-72"
-                unoptimized
-              />
+            <div className="mb-5 space-y-1">
+              <div
+                ref={imageContainerRef}
+                className="relative cursor-grab overflow-hidden rounded-2xl border border-slate-200 active:cursor-grabbing"
+                onMouseDown={handleImageMouseDown}
+                onMouseMove={handleImageMouseMove}
+                onMouseUp={handleImageMouseUp}
+                onMouseLeave={handleImageMouseUp}
+              >
+                <Image
+                  src={imagePreviewUrl}
+                  alt="Vista previa de la imagen principal"
+                  width={960}
+                  height={540}
+                  sizes="(min-width: 768px) 700px, 100vw"
+                  className="pointer-events-none h-56 w-full object-cover md:h-72"
+                  style={{ objectPosition: `${imagePosition.x.toFixed(1)}% ${imagePosition.y.toFixed(1)}%` }}
+                  unoptimized
+                  draggable={false}
+                />
+                <div className="pointer-events-none absolute inset-0 flex items-end justify-end p-2">
+                  <span className="rounded-md bg-black/50 px-2 py-1 text-xs text-white">
+                    Arrastrá para reencuadrar
+                  </span>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="mb-5 flex h-48 w-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">
@@ -278,7 +329,7 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
           <p className="mb-5 text-sm text-slate-600 md:text-base">{previewExcerpt}</p>
           {previewCuerpo ? (
             <div
-              className="prose prose-sm max-w-none text-slate-700 md:prose-base [&_a]:text-sky-600 [&_a]:underline [&_strong]:text-slate-900"
+              className="max-w-none text-slate-700 [&_a]:text-sky-600 [&_a]:underline [&_blockquote]:mb-4 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-200 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h3]:mb-3 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-slate-900 [&_h4]:mb-2 [&_h4]:mt-4 [&_h4]:font-semibold [&_h4]:text-slate-900 [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:text-slate-900 [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5"
               dangerouslySetInnerHTML={{ __html: previewCuerpo }}
             />
           ) : (

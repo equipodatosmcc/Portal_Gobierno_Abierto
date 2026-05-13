@@ -13,6 +13,7 @@ export type NewsUpdatePayload = {
   content?: string;
   category?: string;
   published?: boolean;
+  imagePosition?: string;
   removeImage: boolean;
   imageFile: File | null;
 };
@@ -85,6 +86,7 @@ export function parseNewsUpdateObject(body: unknown): Omit<NewsUpdatePayload, "i
   const slug = normalizeString(candidate?.slug);
   const content = normalizeString(candidate?.content);
   const category = normalizeString(candidate?.category);
+  const imagePosition = normalizeString(candidate?.imagePosition);
 
   return {
     title: title || undefined,
@@ -94,6 +96,7 @@ export function parseNewsUpdateObject(body: unknown): Omit<NewsUpdatePayload, "i
     published: Object.prototype.hasOwnProperty.call(candidate, "published")
       ? parseBoolean(candidate?.published)
       : undefined,
+    imagePosition: imagePosition || undefined,
     removeImage: parseBoolean(candidate?.removeImage, false),
   };
 }
@@ -125,6 +128,7 @@ export function parseNewsUpdateFormData(formData: FormData): NewsUpdatePayload {
   const slug = normalizeString(formData.get("slug"));
   const content = normalizeString(formData.get("content"));
   const category = normalizeString(formData.get("category"));
+  const imagePosition = normalizeString(formData.get("imagePosition"));
   const imageFile = readFile(formData.get("image"));
 
   return {
@@ -133,6 +137,7 @@ export function parseNewsUpdateFormData(formData: FormData): NewsUpdatePayload {
     content: content || undefined,
     category: category || undefined,
     published: formData.has("published") ? parseBoolean(formData.get("published")) : undefined,
+    imagePosition: imagePosition || undefined,
     removeImage: parseBoolean(formData.get("removeImage"), false),
     imageFile,
   };

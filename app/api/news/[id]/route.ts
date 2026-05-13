@@ -81,6 +81,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (payload.content !== undefined) updateData.content = payload.content;
     if (payload.category !== undefined) updateData.category = payload.category;
     if (payload.published !== undefined) updateData.published = payload.published;
+    if (payload.imagePosition !== undefined) updateData.imagePosition = payload.imagePosition;
 
     if (payload.imageFile) {
       const savedImage = await saveNewsImage(payload.imageFile);
