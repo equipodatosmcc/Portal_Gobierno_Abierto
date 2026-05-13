@@ -259,7 +259,7 @@ export function GobiernoAbiertoSection({ items, canEdit = false }: Props) {
                       <div className="relative rounded-xl bg-accent/50 p-5 md:p-7">
                         <PanelIcon size={88} className="absolute bottom-4 right-4 opacity-[0.07] text-primary pointer-events-none" aria-hidden="true" />
                         <div
-                          className="relative prose prose-sm max-w-none md:prose-base [&_a]:text-primary [&_a]:underline [&_strong]:text-foreground [&_p]:text-foreground/80 [&_li]:text-foreground/80"
+                          className="relative [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline [&_strong]:font-semibold [&_strong]:text-foreground [&_p]:text-foreground/80 [&_li]:text-foreground/80"
                           dangerouslySetInnerHTML={{ __html: panel.content }}
                         />
                       </div>
