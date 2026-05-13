@@ -27,5 +27,9 @@ jobs:
           sudo docker compose --env-file .env.server build app_gobierno_abierto
           sudo docker compose --env-file .env.server up -d app_gobierno_abierto
 
-          # 4. Limpieza de imágenes para no llenar el disco de la VM
+          # 4. Migraciones y seed (upsert seguro, no destruye datos)
+          sudo docker compose --env-file .env.server exec -T app_gobierno_abierto pnpm prisma migrate deploy
+          sudo docker compose --env-file .env.server exec -T app_gobierno_abierto pnpm prisma db seed
+
+          # 5. Limpieza de imágenes para no llenar el disco de la VM
           sudo docker image prune -f

@@ -32,4 +32,6 @@ console.log("[setup] Iniciando bootstrap del proyecto...");
 ensureEnvLocal();
 run("pnpm", ["install"]);
 run("docker", ["compose", "up", "-d", "db_gobierno_abierto"]);
+run("pnpm", ["prisma", "migrate", "deploy"]);
+run("pnpm", ["prisma", "db", "seed"]);
 console.log("[setup] Listo. Ejecuta: pnpm dev");
