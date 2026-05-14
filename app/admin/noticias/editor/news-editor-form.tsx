@@ -278,6 +278,7 @@ export function NewsEditorForm({ initialData, existingCategories }: NewsEditorFo
             alt="Imagen principal de la noticia"
             width={640}
             height={352}
+            unoptimized
             className="h-44 w-full rounded-2xl border border-slate-200 object-cover md:w-80"
           />
         </div>

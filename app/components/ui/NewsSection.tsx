@@ -285,6 +285,7 @@ export function NewsSection({
                             alt={`Imagen de ${active.title}`}
                             width={960}
                             height={540}
+                            unoptimized
                             className="pointer-events-none h-64 w-full object-cover md:h-80"
                             style={{ objectPosition: `${draftImagePosition.x.toFixed(1)}% ${draftImagePosition.y.toFixed(1)}%` }}
                             draggable={false}
@@ -302,6 +303,7 @@ export function NewsSection({
                             alt={`Imagen de ${active.title}`}
                             width={960}
                             height={540}
+                            unoptimized
                             className="h-64 w-full object-cover md:h-80"
                             style={{ objectPosition: active.imagePosition }}
                           />
@@ -345,6 +347,7 @@ export function NewsSection({
                       alt={`Imagen de ${item.title}`}
                       width={640}
                       height={360}
+                      unoptimized
                       className="h-full w-full object-cover"
                       style={{ objectPosition: item.imagePosition }}
                     />
