@@ -27,9 +27,14 @@ jobs:
           sudo docker compose --env-file .env.server build app_gobierno_abierto
           sudo docker compose --env-file .env.server up -d app_gobierno_abierto
 
-          # 4. Migraciones y seed (upsert seguro, no destruye datos)
+          # 4. Migraciones (siempre) y seed (solo si RUN_DB_SEED=true en .env.server)
           sudo docker compose --env-file .env.server exec -T app_gobierno_abierto pnpm prisma migrate deploy
-          sudo docker compose --env-file .env.server exec -T app_gobierno_abierto pnpm prisma db seed
+          if grep -qE '^[[:space:]]RUN_DB_SEED[[:space:]]=[[:space:]]true[[:space:]]$' .env.server; then
+            echo "RUN_DB_SEED=true → ejecutando seed"
+            sudo docker compose --env-file .env.server exec -T app_gobierno_abierto pnpm prisma db seed
+          else
+            echo "RUN_DB_SEED!=true → seed omitido"
+          fi
 
           # 5. Limpieza de imágenes para no llenar el disco de la VM
           sudo docker image prune -f
