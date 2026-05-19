@@ -8,7 +8,14 @@ import { SkipLink } from "@/app/components/ui/SkipLink";
 import { StatsSection } from "@/app/components/ui/StatsSection";
 import { GobiernoAbiertoSection } from "@/app/components/ui/GobiernoAbiertoSection";
 import { parseNewsContent } from "@/app/admin/noticias/content-format";
-import { getArboladoData, getCKANDatasetsCount } from "@/lib/data/ckanService";
+import {
+  getArboladoData,
+  getCKANDatasetsCount,
+  getEnfermeriaData,
+  getInmunizacionesData,
+  getOdontologicasData,
+  getSacData,
+} from "@/lib/data/ckanService";
 import { buildDashboards } from "@/lib/data/dashboards";
 import { getSessionManager } from "@/lib/content-auth";
 import { findManyNews } from "@/lib/services/news";
@@ -35,10 +42,14 @@ type WebContentRecord = {
 };
 
 async function getHomeData() {
-  const [newsRecords, contentRecords, arboladoData, datasetsCount] = await Promise.all([
+  const [newsRecords, contentRecords, arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData, datasetsCount] = await Promise.all([
     findManyNews({ onlyPublished: true }).catch(() => []),
     findManyWebContent({ onlyPublished: true }).catch(() => []),
     getArboladoData(),
+    getEnfermeriaData(),
+    getOdontologicasData(),
+    getInmunizacionesData(),
+    getSacData(),
     getCKANDatasetsCount(),
   ]);
 
@@ -53,7 +64,7 @@ async function getHomeData() {
       title: item.title,
       bajada,
       content: cuerpo,
-      excerpt: bajadaText || cuerpoText.slice(0, 170),
+      excerpt: bajadaText || undefined,
       tag: item.category,
       image: item.image,
       imagePosition: item.imagePosition ?? "50% 50%",
@@ -65,15 +76,15 @@ async function getHomeData() {
     .filter((c) => c.slug.startsWith("gobierno-abierto-"))
     .map((item) => ({ id: item.id, slug: item.slug, title: item.title, content: item.content, icon: item.icon }));
 
-  return { news, newsCount: newsRecords.length, gobiernoAbiertoItems, arboladoData, datasetsCount };
+  return { news, newsCount: newsRecords.length, gobiernoAbiertoItems, arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData, datasetsCount };
 }
 
 export default async function Home() {
-  const [{ news, newsCount, gobiernoAbiertoItems, arboladoData, datasetsCount }, manager] = await Promise.all([
+  const [{ news, newsCount, gobiernoAbiertoItems, arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData, datasetsCount }, manager] = await Promise.all([
     getHomeData(),
     getSessionManager(),
   ]);
-  const dashboardsCount = buildDashboards(arboladoData).length;
+  const dashboardsCount = buildDashboards({ arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData }).length;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -88,7 +99,13 @@ export default async function Home() {
         />
         <GobiernoAbiertoSection items={gobiernoAbiertoItems} canEdit={Boolean(manager)} />
         <NewsSection news={news} canEditNews={Boolean(manager)} />
-        <DashboardsSection arboladoData={arboladoData} />
+        <DashboardsSection
+          arboladoData={arboladoData}
+          enfermeriaData={enfermeriaData}
+          odontologicasData={odontologicasData}
+          inmunizacionesData={inmunizacionesData}
+          sacData={sacData}
+        />
         <FeedbackSection />
       </main>
       <Footer />

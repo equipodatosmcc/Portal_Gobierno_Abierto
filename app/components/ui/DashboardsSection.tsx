@@ -7,6 +7,13 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  Radar,
+  RadarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -14,7 +21,14 @@ import {
 } from "recharts";
 import { ArrowLeft, ChevronDown, ExternalLink, Leaf } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
-import type { ArboladoData, ChartBar } from "@/lib/data/ckanService";
+import type {
+  ArboladoData,
+  ChartBar,
+  EnfermeriaData,
+  InmunizacionesData,
+  OdontologicasData,
+  SacData,
+} from "@/lib/data/ckanService";
 import { buildDashboards, type DashboardConfig, type DashboardKey } from "@/lib/data/dashboards";
 
 const PAGE_SIZE = 3;
@@ -73,52 +87,40 @@ function ToolIcon({ name, color }: { name: string; color: string }) {
   );
 }
 
-function CompactChart({ data }: { data: ChartBar[] }) {
+const ARBOLADO_COLORS = ["#15803d", "#16a34a", "#22c55e", "#4ade80", "#86efac"];
+
+function ArboladoCompactChart({ data }: { data: ChartBar[] }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-
   if (!mounted) return <div className="h-36 w-full" />;
-
   return (
     <ResponsiveContainer width="100%" height={144}>
-      <BarChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 4 }}>
-        <XAxis dataKey="label" tick={false} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-        <Tooltip
-          formatter={(v) => [v, "árboles"]}
-          contentStyle={{ fontSize: 11 }}
-        />
-        <Bar dataKey="value" fill="#16a34a" radius={[3, 3, 0, 0]} />
-      </BarChart>
+      <PieChart>
+        <Pie data={data} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={30} outerRadius={58}>
+          {data.map((_, i) => (
+            <Cell key={i} fill={ARBOLADO_COLORS[i % ARBOLADO_COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip formatter={(v) => [v, "árboles"]} contentStyle={{ fontSize: 11 }} />
+      </PieChart>
     </ResponsiveContainer>
   );
 }
 
-function FullChart({ data }: { data: ChartBar[] }) {
+function ArboladoFullChart({ data }: { data: ChartBar[] }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-
   if (!mounted) return <div className="h-80 w-full" />;
-
   return (
     <ResponsiveContainer width="100%" height={320}>
       <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 64 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
-        <XAxis
-          dataKey="label"
-          tick={{ fontSize: 11 }}
-          angle={-35}
-          textAnchor="end"
-          interval={0}
-        />
+        <XAxis dataKey="label" tick={{ fontSize: 11 }} angle={-35} textAnchor="end" interval={0} />
         <YAxis tick={{ fontSize: 11 }} />
         <Tooltip formatter={(v) => [v, "árboles"]} />
         <Bar dataKey="value" fill="#16a34a" radius={[4, 4, 0, 0]}>
           {data.map((_, i) => (
-            <Cell
-              key={i}
-              fill={i === 0 ? "#15803d" : "#16a34a"}
-            />
+            <Cell key={i} fill={i === 0 ? "#15803d" : "#16a34a"} />
           ))}
         </Bar>
       </BarChart>
@@ -126,13 +128,220 @@ function FullChart({ data }: { data: ChartBar[] }) {
   );
 }
 
-type Props = { arboladoData: ArboladoData };
+// ── enfermeria charts ─────────────────────────────────────────────────────────
 
-export function DashboardsSection({ arboladoData }: Props) {
+function EnfermeriaCompactChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-36 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={144}>
+      <RadarChart data={data}>
+        <PolarGrid />
+        <PolarAngleAxis dataKey="label" tick={{ fontSize: 8 }} />
+        <Radar dataKey="value" fill="#e11d48" fillOpacity={0.6} stroke="#e11d48" />
+        <Tooltip formatter={(v) => [v, "consultas"]} contentStyle={{ fontSize: 11 }} />
+      </RadarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function EnfermeriaFullChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-80 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <RadarChart data={data}>
+        <PolarGrid />
+        <PolarAngleAxis dataKey="label" tick={{ fontSize: 11 }} />
+        <Radar dataKey="value" fill="#e11d48" fillOpacity={0.6} stroke="#e11d48" name="Consultas" />
+        <Tooltip formatter={(v) => [v, "consultas"]} />
+        <Legend />
+      </RadarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── odontologicas charts ──────────────────────────────────────────────────────
+
+function OdontologicasCompactChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-36 w-full" />;
+  const truncated = data.map((d) => ({
+    ...d,
+    label: d.label.length > 25 ? `${d.label.slice(0, 22)}…` : d.label,
+  }));
+  return (
+    <ResponsiveContainer width="100%" height={144}>
+      <BarChart data={truncated} layout="vertical" margin={{ top: 4, right: 8, left: 4, bottom: 4 }}>
+        <XAxis type="number" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+        <YAxis type="category" dataKey="label" width={80} tick={{ fontSize: 8 }} axisLine={false} tickLine={false} />
+        <Tooltip formatter={(v) => [v, "consultas"]} contentStyle={{ fontSize: 11 }} />
+        <Bar dataKey="value" fill="#0284c7" radius={[0, 3, 3, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function OdontologicasFullChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-80 w-full" />;
+  const truncated = data.map((d) => ({
+    ...d,
+    label: d.label.length > 40 ? `${d.label.slice(0, 37)}…` : d.label,
+  }));
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <BarChart data={truncated} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
+        <XAxis type="number" tick={{ fontSize: 11 }} />
+        <YAxis type="category" dataKey="label" width={180} tick={{ fontSize: 10 }} />
+        <Tooltip formatter={(v) => [v, "consultas"]} />
+        <Bar dataKey="value" fill="#0284c7" radius={[0, 4, 4, 0]}>
+          {truncated.map((_, i) => (
+            <Cell key={i} fill={i === 0 ? "#0369a1" : "#0284c7"} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── inmunizaciones charts ─────────────────────────────────────────────────────
+
+function InmunizacionesCompactChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-36 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={144}>
+      <BarChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 4 }}>
+        <XAxis dataKey="label" tick={false} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+        <Tooltip formatter={(v) => [v, "vacunas"]} contentStyle={{ fontSize: 11 }} />
+        <Bar dataKey="value" fill="#d97706" radius={[3, 3, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function InmunizacionesFullChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-80 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 64 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
+        <XAxis dataKey="label" tick={{ fontSize: 11 }} angle={-35} textAnchor="end" interval={0} />
+        <YAxis tick={{ fontSize: 11 }} />
+        <Tooltip formatter={(v) => [v, "vacunas"]} />
+        <Bar dataKey="value" fill="#d97706" radius={[4, 4, 0, 0]}>
+          {data.map((_, i) => (
+            <Cell key={i} fill={i === 0 ? "#b45309" : "#d97706"} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── sac charts ────────────────────────────────────────────────────────────────
+
+const SAC_COLORS = ["#7c3aed", "#a855f7", "#c084fc", "#ddd6fe", "#ede9fe"];
+
+function SacCompactChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-36 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={144}>
+      <PieChart>
+        <Pie data={data} dataKey="value" nameKey="label" cx="50%" cy="50%" outerRadius={58}>
+          {data.map((_, i) => (
+            <Cell key={i} fill={SAC_COLORS[i % SAC_COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip formatter={(v) => [v, "contactos"]} contentStyle={{ fontSize: 11 }} />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+function SacFullChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-80 w-full" />;
+  const truncated = data.map((d) => ({
+    ...d,
+    label: d.label.length > 40 ? `${d.label.slice(0, 37)}…` : d.label,
+  }));
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <BarChart data={truncated} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
+        <XAxis type="number" tick={{ fontSize: 11 }} />
+        <YAxis type="category" dataKey="label" width={180} tick={{ fontSize: 10 }} />
+        <Tooltip formatter={(v) => [v, "contactos"]} />
+        <Bar dataKey="value" fill="#7c3aed" radius={[0, 4, 4, 0]}>
+          {truncated.map((_, i) => (
+            <Cell key={i} fill={i === 0 ? "#6d28d9" : "#7c3aed"} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── dashboard key → chart resolver ───────────────────────────────────────────
+
+function DashboardCompactChart({ dashboard }: { dashboard: DashboardConfig }) {
+  switch (dashboard.key) {
+    case "arbolado": return <ArboladoCompactChart data={dashboard.miniData} />;
+    case "enfermeria": return <EnfermeriaCompactChart data={dashboard.miniData} />;
+    case "consultas_odontologicas": return <OdontologicasCompactChart data={dashboard.miniData} />;
+    case "inmunizaciones": return <InmunizacionesCompactChart data={dashboard.miniData} />;
+    case "sac": return <SacCompactChart data={dashboard.miniData} />;
+    default: return <ArboladoCompactChart data={dashboard.miniData} />;
+  }
+}
+
+function DashboardFullChart({ dashboard }: { dashboard: DashboardConfig }) {
+  switch (dashboard.key) {
+    case "arbolado": return <ArboladoFullChart data={dashboard.fullData} />;
+    case "enfermeria": return <EnfermeriaFullChart data={dashboard.fullData} />;
+    case "consultas_odontologicas": return <OdontologicasFullChart data={dashboard.fullData} />;
+    case "inmunizaciones": return <InmunizacionesFullChart data={dashboard.fullData} />;
+    case "sac": return <SacFullChart data={dashboard.fullData} />;
+    default: return <ArboladoFullChart data={dashboard.fullData} />;
+  }
+}
+
+type Props = {
+  arboladoData: ArboladoData;
+  enfermeriaData: EnfermeriaData;
+  odontologicasData: OdontologicasData;
+  inmunizacionesData: InmunizacionesData;
+  sacData: SacData;
+};
+
+export function DashboardsSection({
+  arboladoData,
+  enfermeriaData,
+  odontologicasData,
+  inmunizacionesData,
+  sacData,
+}: Props) {
   const [activeDashboard, setActiveDashboard] = useState<DashboardKey | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const dashboards = useMemo(() => buildDashboards(arboladoData), [arboladoData]);
+  const dashboards = useMemo(
+    () => buildDashboards({ arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData }),
+    [arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData],
+  );
 
   const active = useMemo(
     () => dashboards.find((d) => d.key === activeDashboard),
@@ -191,7 +400,7 @@ export function DashboardsSection({ arboladoData }: Props) {
 
               <div className="grid gap-0 lg:grid-cols-3">
                 <div className="p-8 lg:col-span-2">
-                  <FullChart data={active.fullData} />
+                  <DashboardFullChart dashboard={active} />
                 </div>
                 <div className="border-t border-border p-8 lg:border-l lg:border-t-0">
                   <h4 className="mb-4 font-heading text-lg text-foreground">Indicadores clave</h4>
@@ -252,7 +461,7 @@ export function DashboardsSection({ arboladoData }: Props) {
                           </p>
                         </div>
                         <div className="px-4 pb-2">
-                          <CompactChart data={dashboard.miniData} />
+                          <DashboardCompactChart dashboard={dashboard} />
                         </div>
                         <div className="px-6 pb-5">
                           <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary transition-all group-hover:gap-2">

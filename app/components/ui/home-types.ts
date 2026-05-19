@@ -3,7 +3,7 @@ export type HomeNewsItem = {
   title: string;
   bajada: string;
   content: string;
-  excerpt: string;
+  excerpt: string | undefined;
   tag: string;
   image: string | null;
   imagePosition: string;

@@ -27,8 +27,8 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function extractExcerpt(content: string, fallback: string) {
-  if (fallback.trim().length > 0) {
+function extractExcerpt(content: string, fallback: string | undefined) {
+  if (fallback && fallback.trim().length > 0) {
     return fallback;
   }
 
@@ -316,10 +316,20 @@ export function NewsSection({
                     </div>
                   )}
                   {!isEditing ? (
-                    <div
-                      className="max-w-none text-muted-foreground [&_a]:text-primary [&_a]:underline [&_blockquote]:mb-4 [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic [&_h3]:mb-3 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-foreground [&_h4]:mb-2 [&_h4]:mt-4 [&_h4]:font-semibold [&_h4]:text-foreground [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:text-foreground [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5"
-                      dangerouslySetInnerHTML={{ __html: active.content }}
-                    />
+                    <>
+                      {(() => {
+                        const bajadaText = stripHtml(active.bajada);
+                        return bajadaText ? (
+                          <p className="mb-6 border-l-4 border-primary/60 pl-4 font-heading text-lg leading-relaxed text-foreground md:text-xl">
+                            {bajadaText}
+                          </p>
+                        ) : null;
+                      })()}
+                      <div
+                        className="max-w-none text-muted-foreground [&_a]:text-primary [&_a]:underline [&_blockquote]:mb-4 [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic [&_h3]:mb-3 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-foreground [&_h4]:mb-2 [&_h4]:mt-4 [&_h4]:font-semibold [&_h4]:text-foreground [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:text-foreground [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5"
+                        dangerouslySetInnerHTML={{ __html: active.content }}
+                      />
+                    </>
                   ) : null}
                 </div>
               </article>
