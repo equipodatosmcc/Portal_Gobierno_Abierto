@@ -98,7 +98,6 @@ export default async function Home() {
           newsCount={newsCount}
         />
         <GobiernoAbiertoSection items={gobiernoAbiertoItems} canEdit={Boolean(manager)} />
-        <NewsSection news={news} canEditNews={Boolean(manager)} />
         <DashboardsSection
           arboladoData={arboladoData}
           enfermeriaData={enfermeriaData}
@@ -106,6 +105,7 @@ export default async function Home() {
           inmunizacionesData={inmunizacionesData}
           sacData={sacData}
         />
+        <NewsSection news={news} canEditNews={Boolean(manager)} />
         <FeedbackSection />
       </main>
       <Footer />

@@ -8,8 +8,8 @@ import { Container } from "@/app/components/ui/Container";
 
 const navItems = [
   { label: "Gobierno Abierto", href: "#gobierno-abierto" },
-  { label: "Novedades", href: "#novedades" },
   { label: "Tableros", href: "#tableros" },
+  { label: "Novedades", href: "#novedades" },
   { label: "Feedback", href: "#feedback" },
   { label: "Portal de Datos", href: "https://datos.ciudaddecorrientes.gov.ar/", external: true },
 ];
