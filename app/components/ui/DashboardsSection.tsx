@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Area,
@@ -23,7 +23,21 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowLeft, ChevronDown, ExternalLink, Leaf } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Bus,
+  ChevronDown,
+  ExternalLink,
+  IdCard,
+  Leaf,
+  MessageSquare,
+  Smile,
+  Stethoscope,
+  Syringe,
+  Truck,
+  type LucideIcon,
+} from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
 import type {
   ActasInfraccionData,
@@ -41,6 +55,18 @@ import type {
 import { buildDashboards, type DashboardConfig, type DashboardKey } from "@/lib/data/dashboards";
 
 const PAGE_SIZE = 3;
+
+const DASHBOARD_ICONS: Record<DashboardKey, LucideIcon> = {
+  arbolado: Leaf,
+  enfermeria: Stethoscope,
+  consultas_odontologicas: Smile,
+  inmunizaciones: Syringe,
+  sac: MessageSquare,
+  actas_infraccion: AlertTriangle,
+  habilitaciones_choferes: IdCard,
+  habilitaciones_transporte: Bus,
+  retiros_via_publica: Truck,
+};
 
 const TOOLS = [
   {
@@ -386,9 +412,9 @@ function HabTransporteCompactChart({ data }: { data: StackedDatum[] }) {
       <BarChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 4 }}>
         <XAxis dataKey="label" tick={false} axisLine={false} tickLine={false} />
         <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-        <Tooltip contentStyle={{ fontSize: 11 }} />
-        <Bar dataKey="Definitivo" stackId="a" fill="#0d9488" radius={[0, 0, 0, 0]} />
-        <Bar dataKey="Provisorio" stackId="a" fill="#5eead4" radius={[3, 3, 0, 0]} />
+        <Tooltip contentStyle={{ fontSize: 11, backgroundColor: "#0f766e", border: "none", borderRadius: 6 }} labelStyle={{ color: "#99f6e4" }} itemStyle={{ color: "#ffffff" }} />
+        <Bar dataKey="Definitivo" stackId="a" fill="#0f766e" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="Provisorio" stackId="a" fill="#14b8a6" radius={[3, 3, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -399,17 +425,24 @@ function HabTransporteFullChart({ data }: { data: StackedDatum[] }) {
   useEffect(() => setMounted(true), []);
   if (!mounted) return <div className="h-80 w-full" />;
   return (
-    <ResponsiveContainer width="100%" height={320}>
-      <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 48 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
-        <XAxis dataKey="label" tick={{ fontSize: 11 }} angle={-25} textAnchor="end" interval={0} />
-        <YAxis tick={{ fontSize: 11 }} />
-        <Tooltip />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="Definitivo" stackId="a" fill="#0d9488" />
-        <Bar dataKey="Provisorio" stackId="a" fill="#5eead4" radius={[4, 4, 0, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div>
+      <ResponsiveContainer width="100%" height={320}>
+        <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 56 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
+          <XAxis dataKey="label" tick={{ fontSize: 11 }} angle={-25} textAnchor="end" interval={0} />
+          <YAxis tick={{ fontSize: 11 }} />
+          <Tooltip contentStyle={{ fontSize: 11, backgroundColor: "#0f766e", border: "none", borderRadius: 6 }} labelStyle={{ color: "#99f6e4" }} itemStyle={{ color: "#ffffff" }} />
+          <Legend verticalAlign="top" wrapperStyle={{ fontSize: 12, paddingBottom: 8 }} />
+          <Bar dataKey="Definitivo" stackId="a" fill="#0f766e" />
+          <Bar dataKey="Provisorio" stackId="a" fill="#14b8a6" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+        <strong className="text-foreground">ETPPE:</strong> Empresa de Transporte Privado por Plataforma Electrónica
+        {" · "}
+        <strong className="text-foreground">STE:</strong> Servicio de Triciclos Eléctricos
+      </p>
+    </div>
   );
 }
 
@@ -424,9 +457,9 @@ function RetirosViaPublicaCompactChart({ data }: { data: StackedDatum[] }) {
       <BarChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 4 }} barGap={1}>
         <XAxis dataKey="label" tick={false} axisLine={false} tickLine={false} />
         <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-        <Tooltip contentStyle={{ fontSize: 11 }} />
-        <Bar dataKey="Auto" fill="#0891b2" radius={[2, 2, 0, 0]} />
-        <Bar dataKey="Moto" fill="#67e8f9" radius={[2, 2, 0, 0]} />
+        <Tooltip contentStyle={{ fontSize: 11, backgroundColor: "#0e7490", border: "none", borderRadius: 6 }} labelStyle={{ color: "#a5f3fc" }} itemStyle={{ color: "#ffffff" }} />
+        <Bar dataKey="Auto" fill="#0e7490" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="Moto" fill="#06b6d4" radius={[2, 2, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -438,14 +471,14 @@ function RetirosViaPublicaFullChart({ data }: { data: StackedDatum[] }) {
   if (!mounted) return <div className="h-80 w-full" />;
   return (
     <ResponsiveContainer width="100%" height={320}>
-      <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 48 }} barGap={2}>
+      <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 56 }} barGap={2}>
         <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
         <XAxis dataKey="label" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" interval={1} />
         <YAxis tick={{ fontSize: 11 }} />
-        <Tooltip />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="Auto" fill="#0891b2" radius={[3, 3, 0, 0]} />
-        <Bar dataKey="Moto" fill="#67e8f9" radius={[3, 3, 0, 0]} />
+        <Tooltip contentStyle={{ fontSize: 11, backgroundColor: "#0e7490", border: "none", borderRadius: 6 }} labelStyle={{ color: "#a5f3fc" }} itemStyle={{ color: "#ffffff" }} />
+        <Legend verticalAlign="top" wrapperStyle={{ fontSize: 12, paddingBottom: 8 }} />
+        <Bar dataKey="Auto" fill="#0e7490" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="Moto" fill="#06b6d4" radius={[3, 3, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -508,6 +541,15 @@ export function DashboardsSection({
 }: Props) {
   const [activeDashboard, setActiveDashboard] = useState<DashboardKey | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const activeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeDashboard && activeRef.current) {
+      setTimeout(() => {
+        activeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 80);
+    }
+  }, [activeDashboard]);
 
   const dashboards = useMemo(
     () =>
@@ -568,7 +610,7 @@ export function DashboardsSection({
         </div>
 
         {active ? (
-          <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
+          <div ref={activeRef} className="animate-in slide-in-from-bottom-4 fade-in duration-300">
             <button
               type="button"
               onClick={() => setActiveDashboard(null)}
@@ -581,7 +623,10 @@ export function DashboardsSection({
               <div className="border-b border-border p-8">
                 <div className="flex items-center gap-4">
                   <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${active.colorClass}`}>
-                    <Leaf size={24} aria-hidden="true" />
+                    {(() => {
+                      const ActiveIcon = DASHBOARD_ICONS[active.key] ?? Leaf;
+                      return <ActiveIcon size={24} aria-hidden="true" />;
+                    })()}
                   </div>
                   <div>
                     <h3 className="font-heading text-2xl text-foreground">{active.title}</h3>
@@ -628,7 +673,9 @@ export function DashboardsSection({
             ) : (
               <>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {visibleDashboards.map((dashboard) => (
+                  {visibleDashboards.map((dashboard) => {
+                    const DashboardIcon = DASHBOARD_ICONS[dashboard.key] ?? Leaf;
+                    return (
                     <article
                       key={dashboard.key}
                       className="group overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
@@ -642,7 +689,7 @@ export function DashboardsSection({
                         <div className="p-6 pb-2">
                           <div className="mb-3 flex items-center gap-3">
                             <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${dashboard.colorClass}`}>
-                              <Leaf size={20} aria-hidden="true" />
+                              <DashboardIcon size={20} aria-hidden="true" />
                             </div>
                             <h3 className="font-heading text-xl text-foreground">
                               {dashboard.title}
@@ -662,7 +709,8 @@ export function DashboardsSection({
                         </div>
                       </button>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {hasMore && (

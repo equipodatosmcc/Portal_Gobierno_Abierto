@@ -446,10 +446,12 @@ export async function getHabTransporteData(): Promise<HabTransporteData> {
     const catMap = new Map<string, { Definitivo: number; Provisorio: number }>();
     let totalDef = 0;
     let total = 0;
+    const CATEGORIA_NORMALIZADA: Record<string, string> = { Remisses: "Remises" };
     for (const raw of parsed.data) {
-      const cat = raw.descripcion?.trim();
+      const rawCat = raw.descripcion?.trim();
       const pd = raw.prov_def?.trim();
-      if (!cat || (pd !== "Definitivo" && pd !== "Provisorio")) continue;
+      if (!rawCat || (pd !== "Definitivo" && pd !== "Provisorio")) continue;
+      const cat = CATEGORIA_NORMALIZADA[rawCat] ?? rawCat;
       const cur = catMap.get(cat) ?? { Definitivo: 0, Provisorio: 0 };
       cur[pd] += 1;
       catMap.set(cat, cur);
