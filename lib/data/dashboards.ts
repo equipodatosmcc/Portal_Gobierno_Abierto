@@ -1,13 +1,27 @@
 import type {
+  ActasInfraccionData,
   ArboladoData,
   ChartBar,
   EnfermeriaData,
+  HabChoferesData,
+  HabTransporteData,
   InmunizacionesData,
   OdontologicasData,
+  RetirosViaPublicaData,
   SacData,
+  StackedDatum,
 } from "@/lib/data/ckanService";
 
-export type DashboardKey = "arbolado" | "enfermeria" | "consultas_odontologicas" | "inmunizaciones" | "sac";
+export type DashboardKey =
+  | "arbolado"
+  | "enfermeria"
+  | "consultas_odontologicas"
+  | "inmunizaciones"
+  | "sac"
+  | "actas_infraccion"
+  | "habilitaciones_choferes"
+  | "habilitaciones_transporte"
+  | "retiros_via_publica";
 
 export type DashboardConfig = {
   key: DashboardKey;
@@ -16,6 +30,9 @@ export type DashboardConfig = {
   colorClass: string;
   miniData: ChartBar[];
   fullData: ChartBar[];
+  miniMulti?: StackedDatum[];
+  fullMulti?: StackedDatum[];
+  seriesKeys?: string[];
   stats: Array<{ label: string; value: string }>;
   datasetUrl: string;
 };
@@ -26,6 +43,10 @@ type BuildDashboardsInput = {
   odontologicasData: OdontologicasData;
   inmunizacionesData: InmunizacionesData;
   sacData: SacData;
+  actasInfraccionData: ActasInfraccionData;
+  habChoferesData: HabChoferesData;
+  habTransporteData: HabTransporteData;
+  retirosViaPublicaData: RetirosViaPublicaData;
 };
 
 export function buildDashboards({
@@ -34,6 +55,10 @@ export function buildDashboards({
   odontologicasData,
   inmunizacionesData,
   sacData,
+  actasInfraccionData,
+  habChoferesData,
+  habTransporteData,
+  retirosViaPublicaData,
 }: BuildDashboardsInput): DashboardConfig[] {
   const configs: DashboardConfig[] = [];
 
@@ -125,6 +150,92 @@ export function buildDashboards({
         { label: "Barrios alcanzados", value: String(sacData.totalBarrios) },
       ],
       datasetUrl: "https://datos.ciudaddecorrientes.gov.ar/dataset/sistema-de-atencion-al-ciudadano",
+    });
+  }
+
+  if (actasInfraccionData.byMes.length > 0) {
+    const series = actasInfraccionData.byMes;
+    configs.push({
+      key: "actas_infraccion",
+      title: "Actas de Infracción",
+      description: "Evolución mensual de actas de tránsito emitidas en los últimos 3 años.",
+      colorClass: "bg-red-50 text-red-600",
+      miniData: series.slice(-12),
+      fullData: series,
+      stats: [
+        { label: "Actas totales (histórico)", value: actasInfraccionData.totalActas.toLocaleString("es-AR") },
+        { label: "Mes pico", value: actasInfraccionData.mesPico },
+        { label: "Meses con datos", value: String(actasInfraccionData.totalMeses) },
+      ],
+      datasetUrl: "https://datos.ciudaddecorrientes.gov.ar/dataset/actas_infraccion",
+    });
+  }
+
+  if (habChoferesData.byAnio.length > 0) {
+    const series = habChoferesData.byAnio;
+    configs.push({
+      key: "habilitaciones_choferes",
+      title: "Habilitaciones a Choferes",
+      description: "Habilitaciones de conducción profesional otorgadas por año.",
+      colorClass: "bg-indigo-50 text-indigo-600",
+      miniData: series,
+      fullData: series,
+      stats: [
+        { label: "Habilitaciones totales", value: habChoferesData.totalHabilitaciones.toLocaleString("es-AR") },
+        { label: "Año con más otorgamientos", value: habChoferesData.anioPico },
+        { label: "Años con datos", value: String(habChoferesData.totalAnios) },
+      ],
+      datasetUrl: "https://datos.ciudaddecorrientes.gov.ar/dataset/habilitaciones-a-choferes",
+    });
+  }
+
+  if (habTransporteData.byCategoria.length > 0) {
+    const data = habTransporteData.byCategoria;
+    const fallback: ChartBar[] = data.map((d) => ({
+      label: d.label,
+      value: Number(d.Definitivo) + Number(d.Provisorio),
+    }));
+    configs.push({
+      key: "habilitaciones_transporte",
+      title: "Habilitaciones de Transporte",
+      description: "Habilitaciones vigentes por categoría, separadas en definitivas y provisorias.",
+      colorClass: "bg-teal-50 text-teal-600",
+      miniData: fallback,
+      fullData: fallback,
+      miniMulti: data,
+      fullMulti: data,
+      seriesKeys: ["Definitivo", "Provisorio"],
+      stats: [
+        { label: "Habilitaciones vigentes", value: habTransporteData.totalHabilitaciones.toLocaleString("es-AR") },
+        { label: "Categoría más habilitada", value: habTransporteData.categoriaTop },
+        { label: "% definitivas", value: `${habTransporteData.porcentajeDefinitivos}%` },
+      ],
+      datasetUrl: "https://datos.ciudaddecorrientes.gov.ar/dataset/habilitaciones-vehiculos",
+    });
+  }
+
+  if (retirosViaPublicaData.byMes.length > 0) {
+    const data = retirosViaPublicaData.byMes;
+    const fallback: ChartBar[] = data.map((d) => ({
+      label: d.label,
+      value: Number(d.Auto) + Number(d.Moto),
+    }));
+    configs.push({
+      key: "retiros_via_publica",
+      title: "Retiros de la Vía Pública",
+      description: "Vehículos retirados al depósito municipal por mes, según tipo de unidad.",
+      colorClass: "bg-cyan-50 text-cyan-600",
+      miniData: fallback.slice(-12),
+      fullData: fallback,
+      miniMulti: data.slice(-12),
+      fullMulti: data,
+      seriesKeys: ["Auto", "Moto"],
+      stats: [
+        { label: "Retiros totales", value: retirosViaPublicaData.totalRetiros.toLocaleString("es-AR") },
+        { label: "Mes pico", value: retirosViaPublicaData.mesPico },
+        { label: "% autos vs motos", value: `${retirosViaPublicaData.porcentajeAutos}% / ${100 - retirosViaPublicaData.porcentajeAutos}%` },
+      ],
+      datasetUrl: "https://datos.ciudaddecorrientes.gov.ar/dataset/retiro_via_publica",
     });
   }
 

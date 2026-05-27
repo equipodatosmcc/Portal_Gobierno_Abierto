@@ -309,6 +309,237 @@ export async function getSacData(): Promise<SacData> {
   }
 }
 
+// ── actas infracciones ────────────────────────────────────────────────────────
+
+const ACTAS_INFRACCION_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3qrRl71Tibvi3AH0-EWvYW5T9jUEhNkaBQi6g0yP0qAwMAfAjvGOHFRQ0pXWn1flyghsbAcFES8S_/pub?gid=961866872&single=true&output=csv";
+
+export type ActasInfraccionData = {
+  byMes: ChartBar[];
+  totalActas: number;
+  mesPico: string;
+  totalMeses: number;
+};
+
+const ACTAS_INFRACCION_EMPTY: ActasInfraccionData = {
+  byMes: [],
+  totalActas: 0,
+  mesPico: "—",
+  totalMeses: 0,
+};
+
+export async function getActasInfraccionData(): Promise<ActasInfraccionData> {
+  try {
+    const res = await fetch(ACTAS_INFRACCION_CSV_URL, { next: { revalidate: 43200 } });
+    if (!res.ok) {
+      console.error(`[ckanService] HTTP ${res.status} fetching actas_infraccion CSV`);
+      return ACTAS_INFRACCION_EMPTY;
+    }
+    const csvText = await res.text();
+    const parsed = Papa.parse<Record<string, string>>(csvText, { header: true, skipEmptyLines: true });
+    const map = new Map<string, number>();
+    for (const raw of parsed.data) {
+      const fecha = raw.fecha_emi;
+      if (!fecha) continue;
+      const ym = fecha.slice(0, 7);
+      if (!/^\d{4}-\d{2}$/.test(ym)) continue;
+      map.set(ym, (map.get(ym) ?? 0) + 1);
+    }
+    const all = Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+    const byMes = all.slice(-36).map(([label, value]) => ({ label, value }));
+    const total = all.reduce((s, [, v]) => s + v, 0);
+    const pico = all.reduce<[string, number]>(
+      (max, cur) => (cur[1] > max[1] ? cur : max),
+      ["—", 0],
+    );
+    return { byMes, totalActas: total, mesPico: pico[0], totalMeses: all.length };
+  } catch (err) {
+    console.error("[ckanService] Failed to load actas_infraccion data:", err);
+    return ACTAS_INFRACCION_EMPTY;
+  }
+}
+
+// ── habilitaciones a choferes ─────────────────────────────────────────────────
+
+const HAB_CHOFERES_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-KbCjCuB4R2dy6sNm_NKXsxfgcToIRLsVsBEkrwAqOPwLZgE1n97p6ggfALgkoAx1q8z50pTYQH6U/pub?gid=142889865&single=true&output=csv";
+
+export type HabChoferesData = {
+  byAnio: ChartBar[];
+  totalHabilitaciones: number;
+  anioPico: string;
+  totalAnios: number;
+};
+
+const HAB_CHOFERES_EMPTY: HabChoferesData = {
+  byAnio: [],
+  totalHabilitaciones: 0,
+  anioPico: "—",
+  totalAnios: 0,
+};
+
+export async function getHabChoferesData(): Promise<HabChoferesData> {
+  try {
+    const res = await fetch(HAB_CHOFERES_CSV_URL, { next: { revalidate: 43200 } });
+    if (!res.ok) {
+      console.error(`[ckanService] HTTP ${res.status} fetching habilitaciones_choferes CSV`);
+      return HAB_CHOFERES_EMPTY;
+    }
+    const csvText = await res.text();
+    const parsed = Papa.parse<Record<string, string>>(csvText, { header: true, skipEmptyLines: true });
+    const map = new Map<string, number>();
+    for (const raw of parsed.data) {
+      const fec = raw.fec_otorgamiento;
+      if (!fec) continue;
+      const anio = fec.slice(0, 4);
+      if (!/^\d{4}$/.test(anio)) continue;
+      const year = Number(anio);
+      // descarta valores fuera de rango (el CSV tiene basura tipo "6201")
+      if (year < 2000 || year > 2030) continue;
+      map.set(anio, (map.get(anio) ?? 0) + 1);
+    }
+    const byAnio = Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([label, value]) => ({ label, value }));
+    const total = byAnio.reduce((s, b) => s + b.value, 0);
+    const pico = byAnio.reduce(
+      (max, cur) => (cur.value > max.value ? cur : max),
+      { label: "—", value: 0 } as ChartBar,
+    );
+    return { byAnio, totalHabilitaciones: total, anioPico: pico.label, totalAnios: byAnio.length };
+  } catch (err) {
+    console.error("[ckanService] Failed to load habilitaciones_choferes data:", err);
+    return HAB_CHOFERES_EMPTY;
+  }
+}
+
+// ── habilitaciones de transporte ──────────────────────────────────────────────
+
+const HAB_TRANSPORTE_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQVfAOifHKDOOqoxN7OeN7nT8_q3_qVjXa9scUt9Fjg4u8W7r_WGNJrvQLT4y_KTmVl3ZgHiyMEBNA1/pub?gid=1234840412&single=true&output=csv";
+
+export type StackedDatum = { label: string } & Record<string, number | string>;
+
+export type HabTransporteData = {
+  byCategoria: StackedDatum[];
+  totalHabilitaciones: number;
+  categoriaTop: string;
+  porcentajeDefinitivos: number;
+};
+
+const HAB_TRANSPORTE_EMPTY: HabTransporteData = {
+  byCategoria: [],
+  totalHabilitaciones: 0,
+  categoriaTop: "—",
+  porcentajeDefinitivos: 0,
+};
+
+export async function getHabTransporteData(): Promise<HabTransporteData> {
+  try {
+    const res = await fetch(HAB_TRANSPORTE_CSV_URL, { next: { revalidate: 43200 } });
+    if (!res.ok) {
+      console.error(`[ckanService] HTTP ${res.status} fetching habilitaciones_transporte CSV`);
+      return HAB_TRANSPORTE_EMPTY;
+    }
+    const csvText = await res.text();
+    const parsed = Papa.parse<Record<string, string>>(csvText, { header: true, skipEmptyLines: true });
+    const catMap = new Map<string, { Definitivo: number; Provisorio: number }>();
+    let totalDef = 0;
+    let total = 0;
+    for (const raw of parsed.data) {
+      const cat = raw.descripcion?.trim();
+      const pd = raw.prov_def?.trim();
+      if (!cat || (pd !== "Definitivo" && pd !== "Provisorio")) continue;
+      const cur = catMap.get(cat) ?? { Definitivo: 0, Provisorio: 0 };
+      cur[pd] += 1;
+      catMap.set(cat, cur);
+      total += 1;
+      if (pd === "Definitivo") totalDef += 1;
+    }
+    const byCategoria: StackedDatum[] = Array.from(catMap.entries())
+      .map(([label, v]) => ({ label, Definitivo: v.Definitivo, Provisorio: v.Provisorio }))
+      .sort(
+        (a, b) =>
+          (Number(b.Definitivo) + Number(b.Provisorio)) -
+          (Number(a.Definitivo) + Number(a.Provisorio)),
+      );
+    const top = byCategoria[0]?.label ?? "—";
+    return {
+      byCategoria,
+      totalHabilitaciones: total,
+      categoriaTop: top,
+      porcentajeDefinitivos: total > 0 ? Math.round((totalDef / total) * 100) : 0,
+    };
+  } catch (err) {
+    console.error("[ckanService] Failed to load habilitaciones_transporte data:", err);
+    return HAB_TRANSPORTE_EMPTY;
+  }
+}
+
+// ── retiros via publica ───────────────────────────────────────────────────────
+
+const RETIROS_VIA_PUBLICA_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQOjBvabbSxzRE91en_elTgMvVyKhzQKzVVyUkwjsniwR5bap64P1lakA1nCzOKKeD_h2ydT1Y_XVSy/pub?gid=1593562915&single=true&output=csv";
+
+export type RetirosViaPublicaData = {
+  byMes: StackedDatum[];
+  totalRetiros: number;
+  mesPico: string;
+  porcentajeAutos: number;
+};
+
+const RETIROS_VIA_PUBLICA_EMPTY: RetirosViaPublicaData = {
+  byMes: [],
+  totalRetiros: 0,
+  mesPico: "—",
+  porcentajeAutos: 0,
+};
+
+export async function getRetirosViaPublicaData(): Promise<RetirosViaPublicaData> {
+  try {
+    const res = await fetch(RETIROS_VIA_PUBLICA_CSV_URL, { next: { revalidate: 43200 } });
+    if (!res.ok) {
+      console.error(`[ckanService] HTTP ${res.status} fetching retiros_via_publica CSV`);
+      return RETIROS_VIA_PUBLICA_EMPTY;
+    }
+    const csvText = await res.text();
+    const parsed = Papa.parse<Record<string, string>>(csvText, { header: true, skipEmptyLines: true });
+    const map = new Map<string, { Auto: number; Moto: number }>();
+    let autos = 0;
+    let total = 0;
+    for (const raw of parsed.data) {
+      const fecha = raw.fecha_emi;
+      const tipo = raw.tipo_unidad?.trim();
+      if (!fecha || (tipo !== "Auto" && tipo !== "Moto")) continue;
+      const ym = fecha.slice(0, 7);
+      if (!/^\d{4}-\d{2}$/.test(ym)) continue;
+      const cur = map.get(ym) ?? { Auto: 0, Moto: 0 };
+      cur[tipo] += 1;
+      map.set(ym, cur);
+      total += 1;
+      if (tipo === "Auto") autos += 1;
+    }
+    const all = Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+    const byMes: StackedDatum[] = all
+      .slice(-24)
+      .map(([label, v]) => ({ label, Auto: v.Auto, Moto: v.Moto }));
+    const pico = all.reduce<[string, { Auto: number; Moto: number }]>(
+      (max, cur) =>
+        cur[1].Auto + cur[1].Moto > max[1].Auto + max[1].Moto ? cur : max,
+      ["—", { Auto: 0, Moto: 0 }],
+    );
+    return {
+      byMes,
+      totalRetiros: total,
+      mesPico: pico[0],
+      porcentajeAutos: total > 0 ? Math.round((autos / total) * 100) : 0,
+    };
+  } catch (err) {
+    console.error("[ckanService] Failed to load retiros_via_publica data:", err);
+    return RETIROS_VIA_PUBLICA_EMPTY;
+  }
+}
+
 // ── datasets count ────────────────────────────────────────────────────────────
 
 export async function getCKANDatasetsCount(): Promise<number> {

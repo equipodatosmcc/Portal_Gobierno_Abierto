@@ -9,11 +9,15 @@ import { StatsSection } from "@/app/components/ui/StatsSection";
 import { GobiernoAbiertoSection } from "@/app/components/ui/GobiernoAbiertoSection";
 import { parseNewsContent } from "@/app/admin/noticias/content-format";
 import {
+  getActasInfraccionData,
   getArboladoData,
   getCKANDatasetsCount,
   getEnfermeriaData,
+  getHabChoferesData,
+  getHabTransporteData,
   getInmunizacionesData,
   getOdontologicasData,
+  getRetirosViaPublicaData,
   getSacData,
 } from "@/lib/data/ckanService";
 import { buildDashboards } from "@/lib/data/dashboards";
@@ -42,7 +46,20 @@ type WebContentRecord = {
 };
 
 async function getHomeData() {
-  const [newsRecords, contentRecords, arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData, datasetsCount] = await Promise.all([
+  const [
+    newsRecords,
+    contentRecords,
+    arboladoData,
+    enfermeriaData,
+    odontologicasData,
+    inmunizacionesData,
+    sacData,
+    actasInfraccionData,
+    habChoferesData,
+    habTransporteData,
+    retirosViaPublicaData,
+    datasetsCount,
+  ] = await Promise.all([
     findManyNews({ onlyPublished: true }).catch(() => []),
     findManyWebContent({ onlyPublished: true }).catch(() => []),
     getArboladoData(),
@@ -50,6 +67,10 @@ async function getHomeData() {
     getOdontologicasData(),
     getInmunizacionesData(),
     getSacData(),
+    getActasInfraccionData(),
+    getHabChoferesData(),
+    getHabTransporteData(),
+    getRetirosViaPublicaData(),
     getCKANDatasetsCount(),
   ]);
 
@@ -76,15 +97,53 @@ async function getHomeData() {
     .filter((c) => c.slug.startsWith("gobierno-abierto-"))
     .map((item) => ({ id: item.id, slug: item.slug, title: item.title, content: item.content, icon: item.icon }));
 
-  return { news, newsCount: newsRecords.length, gobiernoAbiertoItems, arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData, datasetsCount };
+  return {
+    news,
+    newsCount: newsRecords.length,
+    gobiernoAbiertoItems,
+    arboladoData,
+    enfermeriaData,
+    odontologicasData,
+    inmunizacionesData,
+    sacData,
+    actasInfraccionData,
+    habChoferesData,
+    habTransporteData,
+    retirosViaPublicaData,
+    datasetsCount,
+  };
 }
 
 export default async function Home() {
-  const [{ news, newsCount, gobiernoAbiertoItems, arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData, datasetsCount }, manager] = await Promise.all([
-    getHomeData(),
-    getSessionManager(),
-  ]);
-  const dashboardsCount = buildDashboards({ arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData }).length;
+  const [
+    {
+      news,
+      newsCount,
+      gobiernoAbiertoItems,
+      arboladoData,
+      enfermeriaData,
+      odontologicasData,
+      inmunizacionesData,
+      sacData,
+      actasInfraccionData,
+      habChoferesData,
+      habTransporteData,
+      retirosViaPublicaData,
+      datasetsCount,
+    },
+    manager,
+  ] = await Promise.all([getHomeData(), getSessionManager()]);
+  const dashboardsCount = buildDashboards({
+    arboladoData,
+    enfermeriaData,
+    odontologicasData,
+    inmunizacionesData,
+    sacData,
+    actasInfraccionData,
+    habChoferesData,
+    habTransporteData,
+    retirosViaPublicaData,
+  }).length;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -104,6 +163,10 @@ export default async function Home() {
           odontologicasData={odontologicasData}
           inmunizacionesData={inmunizacionesData}
           sacData={sacData}
+          actasInfraccionData={actasInfraccionData}
+          habChoferesData={habChoferesData}
+          habTransporteData={habTransporteData}
+          retirosViaPublicaData={retirosViaPublicaData}
         />
         <NewsSection news={news} canEditNews={Boolean(manager)} />
         <FeedbackSection />

@@ -71,7 +71,18 @@ Una vez elegido el tipo de gráfico, identificar:
 - **Top N** (si aplica): 10 para rankings, todos los valores para ≤ 8 categorías
 - **Columna de fecha** (si aplica): formato a parsear
 
-### 0.5 — Proponer al usuario antes de implementar
+### 0.5 — Inventariar previews ya en uso (evitar duplicados visuales)
+
+Antes de elegir, abrir `app/components/ui/DashboardsSection.tsx` y listar mentalmente qué tipo de `CompactChart` usa cada dashboard vivo (Pie donut, Radar, BarChart vertical, BarChart horizontal, Pie pleno, AreaChart, LineChart, Stacked Bar, Grouped Bar). Si el gráfico que te dictó la regla del 0.3 ya tiene una preview idéntica en color y forma, elegir el siguiente candidato razonable (p. ej. si "AreaChart" ya está usado en rojo, usar `LineChart` o `AreaChart` con otro color y otro tipo de línea). **El objetivo es que cada card en el grid se vea distinta a simple vista.**
+
+### 0.6 — Filtrado de basura en columnas reales
+
+Los datasets municipales tienen valores corruptos. **Siempre** aplicar:
+- **Fechas**: validar con regex (`/^\d{4}-\d{2}-\d{2}$/` o `/^\d{4}-\d{2}$/`) **y** rango razonable (`year >= 2000 && year <= 2030`). Hay filas con años "6201", "0202", strings vacíos.
+- **Categóricas**: `.trim()` siempre; descartar `""`, `"null"`, `"undefined"`.
+- **Numéricas**: usar `z.coerce.number()` con `safeParse`; descartar `NaN` y valores fuera de rango razonable.
+
+### 0.7 — Proponer al usuario antes de implementar
 
 Presentar en 2–3 líneas: el gráfico elegido, las columnas que se van a usar, y la historia que cuenta. Esperar confirmación o corrección antes de continuar con el Paso 1.
 
@@ -289,7 +300,45 @@ if (<condición de datos válidos>) {
 - Ítem 2: el dato más destacado (categoría más frecuente, máximo, mínimo, tendencia, etc.)
 - Ítem 3: el total de categorías únicas del dataset completo (no solo del top N ni la muestra)
 
-**Si el gráfico no usa `ChartBar[]`:** extender `DashboardConfig` con campos adicionales tipados para ese dataset. Mantener el resto de la estructura para que la paginación y la vista de detalle sigan funcionando sin cambios.
+**Si el gráfico no usa `ChartBar[]` (stacked / grouped / multi-serie):** seguir este patrón —
+
+1. En `ckanService.ts`, declarar (si no existe ya):
+   ```typescript
+   export type StackedDatum = { label: string } & Record<string, number | string>;
+   ```
+   y devolver los datos como `StackedDatum[]` (`[{ label: "Remisses", Definitivo: 7500, Provisorio: 30 }, ...]`).
+
+2. En `dashboards.ts`, extender `DashboardConfig` con campos opcionales:
+   ```typescript
+   export type DashboardConfig = {
+     // ... campos existentes ...
+     miniData: ChartBar[];   // OBLIGATORIO: fallback simple (sumas o totales por categoría)
+     fullData: ChartBar[];   // OBLIGATORIO: fallback simple
+     miniMulti?: StackedDatum[];
+     fullMulti?: StackedDatum[];
+     seriesKeys?: string[];  // ej. ["Definitivo", "Provisorio"] o ["Auto", "Moto"]
+   };
+   ```
+
+3. En el config del dashboard, llenar **ambos**: el `miniData/fullData` con los totales por categoría (suma de las series) y el `miniMulti/fullMulti` con los datos reales. Así no rompe los tipos existentes ni la enumeración de dashboards.
+
+4. En el resolver del Compact/FullChart, despachar a un componente que lea `dashboard.miniMulti ?? []` / `dashboard.fullMulti ?? []`.
+
+### Icono por dashboard
+
+Hoy todos los dashboards renderizan `<Leaf>` como icono — eso queda OK como default, pero para tableros nuevos preferí un icono `lucide-react` semántico:
+
+| Dominio | Icono sugerido |
+|---------|----------------|
+| Salud / SAPS | `Stethoscope`, `Syringe`, `Pill` |
+| Tránsito / multas | `Car`, `AlertTriangle`, `FileText` |
+| Transporte público | `Bus`, `Truck`, `IdCard` |
+| Arbolado / ambiente | `Leaf`, `TreePine`, `Sprout` |
+| Atención ciudadana | `MessageSquare`, `Phone` |
+| Educación | `GraduationCap`, `BookOpen` |
+| Seguridad | `Shield`, `Siren` |
+
+Para implementarlo: agregar `icon?: LucideIcon` al `DashboardConfig`, pasar el componente en cada entrada, y en `DashboardsSection.tsx` renderizar `const Icon = dashboard.icon ?? Leaf` en lugar del `<Leaf>` hardcodeado.
 
 ---
 
@@ -312,6 +361,21 @@ return { news, transparencyContent, arboladoData, <slug>Data };
 // En el JSX
 <DashboardsSection arboladoData={arboladoData} <slug>Data={<slug>Data} />
 ```
+
+### Validación final (obligatoria)
+
+Antes de declarar la tarea como hecha, correr:
+
+```bash
+pnpm exec tsc --noEmit
+```
+
+No debe haber errores. Si los hay, casi siempre vienen de:
+- olvidar agregar el dataset en `BuildDashboardsInput` o en los `Props` de `DashboardsSection`,
+- typo entre la `key` del switch del resolver y la `DashboardKey` union,
+- usar `dashboard.fullMulti` sin agregarlo como opcional en `DashboardConfig`.
+
+Si el dataset puede cargarse a runtime (no es un schema bug), validar visualmente con `pnpm dev` y abrir `/` para confirmar que la card aparece y la vista de detalle renderiza.
 
 ---
 

@@ -3,11 +3,15 @@
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
   Legend,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   PolarAngleAxis,
@@ -22,12 +26,17 @@ import {
 import { ArrowLeft, ChevronDown, ExternalLink, Leaf } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
 import type {
+  ActasInfraccionData,
   ArboladoData,
   ChartBar,
   EnfermeriaData,
+  HabChoferesData,
+  HabTransporteData,
   InmunizacionesData,
   OdontologicasData,
+  RetirosViaPublicaData,
   SacData,
+  StackedDatum,
 } from "@/lib/data/ckanService";
 import { buildDashboards, type DashboardConfig, type DashboardKey } from "@/lib/data/dashboards";
 
@@ -296,6 +305,152 @@ function SacFullChart({ data }: { data: ChartBar[] }) {
   );
 }
 
+// ── actas infraccion charts (AreaChart) ───────────────────────────────────────
+
+function ActasInfraccionCompactChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-36 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={144}>
+      <AreaChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 4 }}>
+        <XAxis dataKey="label" tick={false} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+        <Tooltip formatter={(v) => [v, "actas"]} contentStyle={{ fontSize: 11 }} />
+        <Area type="monotone" dataKey="value" stroke="#dc2626" fill="#dc262633" strokeWidth={2} />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+function ActasInfraccionFullChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-80 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <AreaChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 48 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
+        <XAxis dataKey="label" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" interval={2} />
+        <YAxis tick={{ fontSize: 11 }} />
+        <Tooltip formatter={(v) => [v, "actas"]} />
+        <Area type="monotone" dataKey="value" stroke="#dc2626" fill="#dc262633" strokeWidth={2} />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── habilitaciones choferes charts (LineChart) ────────────────────────────────
+
+function HabChoferesCompactChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-36 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={144}>
+      <LineChart data={data} margin={{ top: 8, right: 4, left: -24, bottom: 4 }}>
+        <XAxis dataKey="label" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+        <Tooltip formatter={(v) => [v, "habilitaciones"]} contentStyle={{ fontSize: 11 }} />
+        <Line type="monotone" dataKey="value" stroke="#4f46e5" strokeWidth={2} dot={{ r: 3, fill: "#4f46e5" }} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+function HabChoferesFullChart({ data }: { data: ChartBar[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-80 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
+        <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+        <YAxis tick={{ fontSize: 11 }} />
+        <Tooltip formatter={(v) => [v, "habilitaciones"]} />
+        <Line type="monotone" dataKey="value" stroke="#4f46e5" strokeWidth={3} dot={{ r: 5, fill: "#4f46e5" }} activeDot={{ r: 7 }} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── habilitaciones transporte charts (Stacked BarChart) ───────────────────────
+
+function HabTransporteCompactChart({ data }: { data: StackedDatum[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-36 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={144}>
+      <BarChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 4 }}>
+        <XAxis dataKey="label" tick={false} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+        <Tooltip contentStyle={{ fontSize: 11 }} />
+        <Bar dataKey="Definitivo" stackId="a" fill="#0d9488" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="Provisorio" stackId="a" fill="#5eead4" radius={[3, 3, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function HabTransporteFullChart({ data }: { data: StackedDatum[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-80 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 48 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
+        <XAxis dataKey="label" tick={{ fontSize: 11 }} angle={-25} textAnchor="end" interval={0} />
+        <YAxis tick={{ fontSize: 11 }} />
+        <Tooltip />
+        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Bar dataKey="Definitivo" stackId="a" fill="#0d9488" />
+        <Bar dataKey="Provisorio" stackId="a" fill="#5eead4" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── retiros via publica charts (Grouped BarChart) ─────────────────────────────
+
+function RetirosViaPublicaCompactChart({ data }: { data: StackedDatum[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-36 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={144}>
+      <BarChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 4 }} barGap={1}>
+        <XAxis dataKey="label" tick={false} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+        <Tooltip contentStyle={{ fontSize: 11 }} />
+        <Bar dataKey="Auto" fill="#0891b2" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="Moto" fill="#67e8f9" radius={[2, 2, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function RetirosViaPublicaFullChart({ data }: { data: StackedDatum[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-80 w-full" />;
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 48 }} barGap={2}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
+        <XAxis dataKey="label" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" interval={1} />
+        <YAxis tick={{ fontSize: 11 }} />
+        <Tooltip />
+        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Bar dataKey="Auto" fill="#0891b2" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="Moto" fill="#67e8f9" radius={[3, 3, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
 // ── dashboard key → chart resolver ───────────────────────────────────────────
 
 function DashboardCompactChart({ dashboard }: { dashboard: DashboardConfig }) {
@@ -305,6 +460,10 @@ function DashboardCompactChart({ dashboard }: { dashboard: DashboardConfig }) {
     case "consultas_odontologicas": return <OdontologicasCompactChart data={dashboard.miniData} />;
     case "inmunizaciones": return <InmunizacionesCompactChart data={dashboard.miniData} />;
     case "sac": return <SacCompactChart data={dashboard.miniData} />;
+    case "actas_infraccion": return <ActasInfraccionCompactChart data={dashboard.miniData} />;
+    case "habilitaciones_choferes": return <HabChoferesCompactChart data={dashboard.miniData} />;
+    case "habilitaciones_transporte": return <HabTransporteCompactChart data={dashboard.miniMulti ?? []} />;
+    case "retiros_via_publica": return <RetirosViaPublicaCompactChart data={dashboard.miniMulti ?? []} />;
     default: return <ArboladoCompactChart data={dashboard.miniData} />;
   }
 }
@@ -316,6 +475,10 @@ function DashboardFullChart({ dashboard }: { dashboard: DashboardConfig }) {
     case "consultas_odontologicas": return <OdontologicasFullChart data={dashboard.fullData} />;
     case "inmunizaciones": return <InmunizacionesFullChart data={dashboard.fullData} />;
     case "sac": return <SacFullChart data={dashboard.fullData} />;
+    case "actas_infraccion": return <ActasInfraccionFullChart data={dashboard.fullData} />;
+    case "habilitaciones_choferes": return <HabChoferesFullChart data={dashboard.fullData} />;
+    case "habilitaciones_transporte": return <HabTransporteFullChart data={dashboard.fullMulti ?? []} />;
+    case "retiros_via_publica": return <RetirosViaPublicaFullChart data={dashboard.fullMulti ?? []} />;
     default: return <ArboladoFullChart data={dashboard.fullData} />;
   }
 }
@@ -326,6 +489,10 @@ type Props = {
   odontologicasData: OdontologicasData;
   inmunizacionesData: InmunizacionesData;
   sacData: SacData;
+  actasInfraccionData: ActasInfraccionData;
+  habChoferesData: HabChoferesData;
+  habTransporteData: HabTransporteData;
+  retirosViaPublicaData: RetirosViaPublicaData;
 };
 
 export function DashboardsSection({
@@ -334,13 +501,38 @@ export function DashboardsSection({
   odontologicasData,
   inmunizacionesData,
   sacData,
+  actasInfraccionData,
+  habChoferesData,
+  habTransporteData,
+  retirosViaPublicaData,
 }: Props) {
   const [activeDashboard, setActiveDashboard] = useState<DashboardKey | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const dashboards = useMemo(
-    () => buildDashboards({ arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData }),
-    [arboladoData, enfermeriaData, odontologicasData, inmunizacionesData, sacData],
+    () =>
+      buildDashboards({
+        arboladoData,
+        enfermeriaData,
+        odontologicasData,
+        inmunizacionesData,
+        sacData,
+        actasInfraccionData,
+        habChoferesData,
+        habTransporteData,
+        retirosViaPublicaData,
+      }),
+    [
+      arboladoData,
+      enfermeriaData,
+      odontologicasData,
+      inmunizacionesData,
+      sacData,
+      actasInfraccionData,
+      habChoferesData,
+      habTransporteData,
+      retirosViaPublicaData,
+    ],
   );
 
   const active = useMemo(
