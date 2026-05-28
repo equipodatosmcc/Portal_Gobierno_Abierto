@@ -39,7 +39,8 @@ model News {
   imagePosition String?  @default("50% 50%") // CSS object-position (ej: "30% 20%")
   category      String   @default("General") // Ej: Salud, Educación, Obras
   published   Boolean  @default(false)
-  
+  position    Int?     // orden manual; null = al final, ordenado por updatedAt
+
   author      User     @relation(fields: [authorId], references: [id])
   authorId    String
   

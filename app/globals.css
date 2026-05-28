@@ -145,3 +145,17 @@ section[id] {
     transform: translateY(0) scale(1);
   }
 }
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.22s ease-in-out infinite;
+}
+
+.animate-wiggle-alt {
+  animation: wiggle 0.22s ease-in-out infinite;
+  animation-delay: -0.11s;
+}

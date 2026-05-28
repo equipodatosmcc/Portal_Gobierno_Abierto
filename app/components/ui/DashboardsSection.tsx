@@ -198,6 +198,18 @@ function EnfermeriaFullChart({ data }: { data: ChartBar[] }) {
   );
 }
 
+function CustomBarTooltip({ active, payload, unit }: { active?: boolean; payload?: { value: unknown; payload: { fullLabel?: string } }[]; unit: string }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: "white", border: "1px solid #e2e8f0", borderRadius: 6, padding: "6px 10px", fontSize: 11, maxWidth: 260 }}>
+      {payload[0].payload.fullLabel && (
+        <p style={{ marginBottom: 2, fontWeight: 600, wordBreak: "break-word" }}>{payload[0].payload.fullLabel}</p>
+      )}
+      <p>{String(payload[0].value)} {unit}</p>
+    </div>
+  );
+}
+
 // ── odontologicas charts ──────────────────────────────────────────────────────
 
 function OdontologicasCompactChart({ data }: { data: ChartBar[] }) {
@@ -206,6 +218,7 @@ function OdontologicasCompactChart({ data }: { data: ChartBar[] }) {
   if (!mounted) return <div className="h-36 w-full" />;
   const truncated = data.map((d) => ({
     ...d,
+    fullLabel: d.label,
     label: d.label.length > 25 ? `${d.label.slice(0, 22)}…` : d.label,
   }));
   return (
@@ -213,7 +226,7 @@ function OdontologicasCompactChart({ data }: { data: ChartBar[] }) {
       <BarChart data={truncated} layout="vertical" margin={{ top: 4, right: 8, left: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
         <YAxis type="category" dataKey="label" width={80} tick={{ fontSize: 8 }} axisLine={false} tickLine={false} />
-        <Tooltip formatter={(v) => [v, "consultas"]} contentStyle={{ fontSize: 11 }} />
+        <Tooltip content={<CustomBarTooltip unit="consultas" />} />
         <Bar dataKey="value" fill="#0284c7" radius={[0, 3, 3, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -226,6 +239,7 @@ function OdontologicasFullChart({ data }: { data: ChartBar[] }) {
   if (!mounted) return <div className="h-80 w-full" />;
   const truncated = data.map((d) => ({
     ...d,
+    fullLabel: d.label,
     label: d.label.length > 40 ? `${d.label.slice(0, 37)}…` : d.label,
   }));
   return (
@@ -234,7 +248,7 @@ function OdontologicasFullChart({ data }: { data: ChartBar[] }) {
         <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
         <XAxis type="number" tick={{ fontSize: 11 }} />
         <YAxis type="category" dataKey="label" width={180} tick={{ fontSize: 10 }} />
-        <Tooltip formatter={(v) => [v, "consultas"]} />
+        <Tooltip content={<CustomBarTooltip unit="consultas" />} />
         <Bar dataKey="value" fill="#0284c7" radius={[0, 4, 4, 0]}>
           {truncated.map((_, i) => (
             <Cell key={i} fill={i === 0 ? "#0369a1" : "#0284c7"} />
@@ -312,6 +326,7 @@ function SacFullChart({ data }: { data: ChartBar[] }) {
   if (!mounted) return <div className="h-80 w-full" />;
   const truncated = data.map((d) => ({
     ...d,
+    fullLabel: d.label,
     label: d.label.length > 40 ? `${d.label.slice(0, 37)}…` : d.label,
   }));
   return (
@@ -320,7 +335,7 @@ function SacFullChart({ data }: { data: ChartBar[] }) {
         <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
         <XAxis type="number" tick={{ fontSize: 11 }} />
         <YAxis type="category" dataKey="label" width={180} tick={{ fontSize: 10 }} />
-        <Tooltip formatter={(v) => [v, "contactos"]} />
+        <Tooltip content={<CustomBarTooltip unit="contactos" />} />
         <Bar dataKey="value" fill="#7c3aed" radius={[0, 4, 4, 0]}>
           {truncated.map((_, i) => (
             <Cell key={i} fill={i === 0 ? "#6d28d9" : "#7c3aed"} />

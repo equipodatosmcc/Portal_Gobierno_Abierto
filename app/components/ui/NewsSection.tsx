@@ -2,7 +2,26 @@
 
 import { useMemo, useRef, useState, type MouseEvent } from "react";
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, Calendar, Pencil } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, GripVertical, Pencil, X } from "lucide-react";
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Container } from "@/app/components/ui/Container";
 import { HomeNewsItem } from "@/app/components/ui/home-types";
 import { serializeNewsContent } from "@/app/admin/noticias/content-format";
@@ -40,6 +59,131 @@ function extractExcerpt(content: string, fallback: string | undefined) {
   return `${plain.slice(0, 157)}...`;
 }
 
+function NewsCardVisual({
+  item,
+  onOpen,
+  elevated = false,
+  interactive = true,
+}: {
+  item: HomeNewsItem;
+  onOpen?: () => void;
+  elevated?: boolean;
+  interactive?: boolean;
+}) {
+  return (
+    <article
+      className={`group relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card ${
+        elevated
+          ? "scale-105 shadow-2xl"
+          : interactive
+            ? "transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+            : ""
+      }`}
+    >
+      <div className="h-2 shrink-0 bg-linear-to-r from-secondary via-primary to-gov-green" aria-hidden="true" />
+      <div className="aspect-video w-full shrink-0 overflow-hidden bg-muted">
+        {item.image ? (
+          <Image
+            src={item.image}
+            alt={`Imagen de ${item.title}`}
+            width={640}
+            height={360}
+            unoptimized
+            className="h-full w-full object-cover"
+            style={{ objectPosition: item.imagePosition }}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Sin imagen
+          </div>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col p-6">
+        <div className="mb-3 flex items-center gap-3">
+          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+            {item.tag}
+          </span>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Calendar size={12} aria-hidden="true" /> {formatDate(item.createdAt)}
+          </span>
+        </div>
+        <h3 className="mb-2 font-heading text-lg text-foreground transition-colors group-hover:text-primary">
+          {item.title}
+        </h3>
+        <p className="mb-4 flex-1 line-clamp-3 text-sm text-muted-foreground">{item.excerpt}</p>
+        {interactive && onOpen ? (
+          <button
+            type="button"
+            onClick={onOpen}
+            className="inline-flex items-center gap-1 text-sm font-semibold text-primary transition-all hover:gap-2"
+            aria-label={`Leer mas sobre ${item.title}`}
+          >
+            Leer mas <ArrowRight size={14} aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function SortableNewsCard({
+  item,
+  index,
+  isReorderMode,
+  onOpen,
+}: {
+  item: HomeNewsItem;
+  index: number;
+  isReorderMode: boolean;
+  onOpen: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+    disabled: !isReorderMode,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  if (isDragging) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="aspect-auto rounded-xl border-2 border-dashed border-border bg-muted opacity-60"
+        aria-hidden="true"
+      >
+        <div className="invisible h-full">
+          <NewsCardVisual item={item} interactive={false} />
+        </div>
+      </div>
+    );
+  }
+
+  if (isReorderMode) {
+    const wiggleClass = index % 2 === 0 ? "animate-wiggle" : "animate-wiggle-alt";
+    return (
+      <div
+        ref={setNodeRef}
+        style={{ ...style, touchAction: "none" }}
+        {...attributes}
+        {...listeners}
+        className={`${wiggleClass} h-full cursor-grab active:cursor-grabbing`}
+      >
+        <NewsCardVisual item={item} interactive={false} />
+      </div>
+    );
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="h-full">
+      <NewsCardVisual item={item} onOpen={onOpen} />
+    </div>
+  );
+}
+
 export function NewsSection({
   news,
   initialDisplayCount = 3,
@@ -55,6 +199,13 @@ export function NewsSection({
   const [draftImagePosition, setDraftImagePosition] = useState({ x: 50, y: 50 });
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [saveOrderError, setSaveOrderError] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   const imageDragState = useRef<{ startX: number; startY: number; posX: number; posY: number } | null>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -162,8 +313,43 @@ export function NewsSection({
     }
   }
 
+  function handleStartReorder() {
+    setIsReorderMode(true);
+    setSaveOrderError(null);
+  }
+
+  async function saveOrder(ids: number[]) {
+    try {
+      const res = await fetch("/api/news/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) throw new Error("No se pudo guardar el orden.");
+      setSaveOrderError(null);
+    } catch (err) {
+      setSaveOrderError(err instanceof Error ? err.message : "Error al guardar.");
+    }
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    setDraggingId(event.active.id as number);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setDraggingId(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = newsItems.findIndex((n) => n.id === active.id);
+    const newIndex = newsItems.findIndex((n) => n.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(newsItems, oldIndex, newIndex);
+    setNewsItems(next);
+    saveOrder(next.map((n) => n.id));
+  }
+
   return (
-    <section id="novedades" className="bg-gov-warm py-24">
+    <section id="novedades" className="overflow-x-hidden bg-gov-warm py-24">
       <Container>
         <div className="mb-16 text-center">
           <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-primary">Actualidad</p>
@@ -171,6 +357,15 @@ export function NewsSection({
           <p className="mx-auto max-w-xl text-muted-foreground">
             Mantente informado sobre las ultimas novedades de gobierno abierto y transparencia municipal.
           </p>
+          {canEditNews && !isDetailOpen && !isReorderMode && (
+            <button
+              type="button"
+              onClick={handleStartReorder}
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+            >
+              <GripVertical size={14} /> Ordenar noticias
+            </button>
+          )}
         </div>
 
         <div
@@ -343,59 +538,55 @@ export function NewsSection({
           }`}
           aria-hidden={isDetailOpen}
         >
-          <div className="grid gap-6 md:grid-cols-3">
-            {visibleNews.map((item) => (
-              <article
-                key={item.id}
-                className="group overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={(isReorderMode ? normalizedNews : visibleNews).map((n) => n.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid items-stretch gap-6 md:grid-cols-3">
+                {(isReorderMode ? normalizedNews : visibleNews).map((item, index) => (
+                  <SortableNewsCard
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    isReorderMode={isReorderMode}
+                    onOpen={() => setActiveArticleId(item.id)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+            <DragOverlay>
+              {draggingId !== null ? (
+                <NewsCardVisual
+                  item={normalizedNews.find((n) => n.id === draggingId)!}
+                  elevated
+                  interactive={false}
+                />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+
+          {isReorderMode && (
+            <div className="mt-8 flex flex-col items-center gap-2">
+              {saveOrderError && (
+                <p className="text-sm text-red-500">{saveOrderError}</p>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsReorderMode(false)}
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-6 py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-muted"
               >
-                <div className="h-2 bg-linear-to-r from-secondary via-primary to-gov-green" aria-hidden="true" />
-                <div className="aspect-video w-full overflow-hidden bg-muted">
-                  {item.image ? (
-                    <Image
-                      src={item.image}
-                      alt={`Imagen de ${item.title}`}
-                      width={640}
-                      height={360}
-                      unoptimized
-                      className="h-full w-full object-cover"
-                      style={{ objectPosition: item.imagePosition }}
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                      Sin imagen
-                    </div>
-                  )}
-                </div>
-                <div className="p-6">
-                  <div className="mb-3 flex items-center gap-3">
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                      {item.tag}
-                    </span>
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Calendar size={12} aria-hidden="true" /> {formatDate(item.createdAt)}
-                    </span>
-                  </div>
+                <X size={14} /> Listo
+              </button>
+            </div>
+          )}
 
-                  <h3 className="mb-2 font-heading text-lg text-foreground transition-colors group-hover:text-primary">
-                    {item.title}
-                  </h3>
-                  <p className="mb-4 line-clamp-3 text-sm text-muted-foreground">{item.excerpt}</p>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveArticleId(item.id)}
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-primary transition-all hover:gap-2"
-                    aria-label={`Leer mas sobre ${item.title}`}
-                  >
-                    Leer mas <ArrowRight size={14} aria-hidden="true" />
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {hasMore ? (
+          {!isReorderMode && hasMore ? (
             <div className="mt-8 flex justify-center">
               <button
                 type="button"
