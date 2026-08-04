@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Execute Deploy
+      - name: Build image (este runner tiene Docker moderno)
         run: |
           # 1. Entramos a la carpeta en el home de deployer
           cd /home/deployer/Portal_Gobierno_Abierto
@@ -23,18 +23,40 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
 
-          # 3. Build y deploy con Docker usando el archivo de entorno del server
+          # 3. Build de la imagen (el Docker de datos-vm es muy viejo y no puede
+          #    bajar imagenes con manifest OCI, por eso se buildea aca y se lleva)
           sudo docker compose --env-file .env.server build app_gobierno_abierto
-          sudo docker compose --env-file .env.server up -d app_gobierno_abierto
 
-          # 4. Migraciones (siempre) y seed (solo si RUN_DB_SEED=true en .env.server)
-          sudo docker compose --env-file .env.server exec -T app_gobierno_abierto pnpm prisma migrate deploy
-          if grep -qE '^[[:space:]]RUN_DB_SEED[[:space:]]=[[:space:]]true[[:space:]]$' .env.server; then
-            echo "RUN_DB_SEED=true → ejecutando seed"
-            sudo docker compose --env-file .env.server exec -T app_gobierno_abierto pnpm prisma db seed
-          else
-            echo "RUN_DB_SEED!=true → seed omitido"
-          fi
+          # 4. Exportamos la imagen a un tar para copiarla a datos-vm
+          sudo docker save portal_gobierno_abierto-app_gobierno_abierto:latest -o /tmp/app_image.tar
+          sudo chown deployer:deployer /tmp/app_image.tar
 
-          # 5. Limpieza de imágenes para no llenar el disco de la VM
-          sudo docker image prune -f
+      - name: Deploy en datos-vm (carga de imagen + restart)
+        run: |
+          # 1. Copiamos la imagen ya buildeada a datos-vm
+          scp /tmp/app_image.tar datos-vm:/tmp/app_image.tar
+          rm -f /tmp/app_image.tar
+
+          # 2. En datos-vm: actualizamos el repo (docker-compose.yml, migraciones, etc.),
+          #    cargamos la imagen y reiniciamos el contenedor de la app
+          ssh datos-vm '
+            set -e
+            cd /home/deployer/Portal_Gobierno_Abierto
+            git fetch origin main
+            git reset --hard origin/main
+
+            docker load -i /tmp/app_image.tar
+            rm -f /tmp/app_image.tar
+
+            docker compose --env-file .env.server up -d app_gobierno_abierto
+
+            docker compose --env-file .env.server exec -T app_gobierno_abierto pnpm prisma migrate deploy
+            if grep -qE "^[[:space:]]*RUN_DB_SEED[[:space:]]*=[[:space:]]*true[[:space:]]*$" .env.server; then
+              echo "RUN_DB_SEED=true → ejecutando seed"
+              docker compose --env-file .env.server exec -T app_gobierno_abierto pnpm prisma db seed
+            else
+              echo "RUN_DB_SEED!=true → seed omitido"
+            fi
+
+            docker image prune -f
+          '
