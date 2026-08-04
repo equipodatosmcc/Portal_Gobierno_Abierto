@@ -31,6 +31,9 @@ jobs:
           sudo docker save portal_gobierno_abierto-app_gobierno_abierto:latest -o /tmp/app_image.tar
           sudo chown deployer:deployer /tmp/app_image.tar
 
+          # 5. Limpieza de imágenes intermedias/huerfanas para no llenar el disco de oficios-vm
+          sudo docker image prune -f
+
       - name: Deploy en datos-vm (carga de imagen + restart)
         run: |
           # 1. Copiamos la imagen ya buildeada a datos-vm
