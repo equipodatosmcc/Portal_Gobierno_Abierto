@@ -17,7 +17,7 @@ jobs:
       - name: Build image (build local, Docker moderno)
         # Windows resuelve "bash" al stub de WSL en System32 antes que al de Git;
         # forzamos la ruta exacta de Git Bash para que interprete bien el script.
-        shell: "C:\\Program Files\\Git\\bin\\bash.exe -e -o pipefail {0}"
+        shell: "C:/Program Files/Git/bin/bash.exe -e -o pipefail {0}"
         run: |
           # 1. Entramos a la carpeta persistente (fuera del workspace de Actions,
           #    para que .env.server no se borre en cada checkout)
@@ -38,7 +38,7 @@ jobs:
           docker image prune -f
 
       - name: Deploy en datos-vm (carga de imagen + restart)
-        shell: "C:\\Program Files\\Git\\bin\\bash.exe -e -o pipefail {0}"
+        shell: "C:/Program Files/Git/bin/bash.exe -e -o pipefail {0}"
         run: |
           # 1. Copiamos la imagen ya buildeada a datos-vm
           scp /tmp/app_image.tar datos-vm:/tmp/app_image.tar
