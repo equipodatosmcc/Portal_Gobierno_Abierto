@@ -7,34 +7,36 @@ on:
 
 jobs:
   deploy:
-    # Usamos tu servidor de la muni como ejecutor
-    runs-on: self-hosted
+    # Build local (tu PC, Docker moderno) + deploy remoto en datos-vm
+    runs-on: [self-hosted, local-build]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build image (este runner tiene Docker moderno)
+      - name: Build image (build local, Docker moderno)
+        shell: bash
         run: |
-          # 1. Entramos a la carpeta en el home de deployer
-          cd /home/deployer/Portal_Gobierno_Abierto
+          # 1. Entramos a la carpeta persistente (fuera del workspace de Actions,
+          #    para que .env.server no se borre en cada checkout)
+          cd /c/deploy/Portal_Gobierno_Abierto
 
-          # 2. Forzamos que el servidor se iguale a GitHub (evita errores de 'unmerged files')
+          # 2. Forzamos que el checkout local se iguale a GitHub (evita errores de 'unmerged files')
           git fetch origin main
           git reset --hard origin/main
 
           # 3. Build de la imagen (el Docker de datos-vm es muy viejo y no puede
           #    bajar imagenes con manifest OCI, por eso se buildea aca y se lleva)
-          sudo docker compose --env-file .env.server build app_gobierno_abierto
+          docker compose --env-file .env.server build app_gobierno_abierto
 
           # 4. Exportamos la imagen a un tar para copiarla a datos-vm
-          sudo docker save portal_gobierno_abierto-app_gobierno_abierto:latest -o /tmp/app_image.tar
-          sudo chown deployer:deployer /tmp/app_image.tar
+          docker save portal_gobierno_abierto-app_gobierno_abierto:latest -o /tmp/app_image.tar
 
-          # 5. Limpieza de imágenes intermedias/huerfanas para no llenar el disco de oficios-vm
-          sudo docker image prune -f
+          # 5. Limpieza de imágenes intermedias/huerfanas para no llenar el disco local
+          docker image prune -f
 
       - name: Deploy en datos-vm (carga de imagen + restart)
+        shell: bash
         run: |
           # 1. Copiamos la imagen ya buildeada a datos-vm
           scp /tmp/app_image.tar datos-vm:/tmp/app_image.tar
