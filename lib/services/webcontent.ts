@@ -53,6 +53,22 @@ export async function findManyWebContent(options?: { onlyPublished?: boolean }) 
   });
 }
 
+// Fila de WebContent usada como flag: published=false oculta la sección Novedades. Sin fila = visible.
+export const NEWS_SECTION_SLUG = "seccion-novedades";
+
+export async function isNewsSectionVisible() {
+  const flag = await prisma.webContent.findUnique({ where: { slug: NEWS_SECTION_SLUG } });
+  return flag?.published ?? true;
+}
+
+export async function setNewsSectionVisible(visible: boolean) {
+  await prisma.webContent.upsert({
+    where: { slug: NEWS_SECTION_SLUG },
+    update: { published: visible },
+    create: { slug: NEWS_SECTION_SLUG, title: "Sección Novedades", content: "", published: visible },
+  });
+}
+
 export async function findWebContentById(id: number) {
   return webContentDelegate.findUnique({
     where: { id },

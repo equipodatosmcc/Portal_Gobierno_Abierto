@@ -7,7 +7,7 @@ import { Container } from "@/app/components/ui/Container";
 type StatsSectionProps = {
   datasetsCount: number;
   dashboardsCount: number;
-  newsCount: number;
+  newsCount: number | null; // null = sección Novedades oculta
 };
 
 export function StatsSection({
@@ -18,14 +18,16 @@ export function StatsSection({
   const stats = [
     { icon: Database, value: `${datasetsCount}+`, label: "Datasets Publicados", href: "https://datos.ciudaddecorrientes.gov.ar/", external: true },
     { icon: BarChart3, value: `${dashboardsCount}`, label: "Tableros Interactivos", href: "#tableros" },
-    { icon: Newspaper, value: `${newsCount}`, label: "Noticias Publicadas", href: "#novedades" },
+    ...(newsCount === null
+      ? []
+      : [{ icon: Newspaper, value: `${newsCount}`, label: "Noticias Publicadas", href: "#novedades" }]),
   ];
 
   return (
     <section id="stats" className="relative -mt-16 z-20">
       <Container>
         <h2 className="sr-only">Indicadores principales</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className={`grid grid-cols-1 gap-4 ${stats.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
           {stats.map((stat, index) => (
             <Link
               key={stat.label}

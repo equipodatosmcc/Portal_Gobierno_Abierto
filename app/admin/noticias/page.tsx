@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { NewsOrderTable } from "./components/news-order-table";
 import { getNewsList } from "./data";
+import { toggleNewsSectionAction } from "./actions";
+import { isNewsSectionVisible } from "@/lib/services/webcontent";
 
 export default async function AdminNewsPage() {
-  const news = await getNewsList();
+  const [news, sectionVisible] = await Promise.all([getNewsList(), isNewsSectionVisible()]);
   const publishedCount = news.filter((item) => item.published).length;
   const draftCount = news.length - publishedCount;
 
@@ -39,6 +41,31 @@ export default async function AdminNewsPage() {
           <p className="mt-2 text-2xl font-bold text-amber-900">{draftCount}</p>
         </article>
       </div>
+
+      <form
+        action={toggleNewsSectionAction}
+        className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4"
+      >
+        <input type="hidden" name="visible" value={String(!sectionVisible)} />
+        <div>
+          <p className="text-sm font-semibold text-slate-900">Sección Novedades en el portal</p>
+          <p className="text-sm text-slate-600">
+            {sectionVisible
+              ? "Visible: las noticias publicadas se muestran en la home."
+              : "Oculta: la sección y sus enlaces no se muestran en la home."}
+          </p>
+        </div>
+        <button
+          type="submit"
+          className={
+            sectionVisible
+              ? "rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition hover:bg-amber-100"
+              : "rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100"
+          }
+        >
+          {sectionVisible ? "Ocultar sección" : "Mostrar sección"}
+        </button>
+      </form>
 
       <NewsOrderTable news={news} />
     </section>

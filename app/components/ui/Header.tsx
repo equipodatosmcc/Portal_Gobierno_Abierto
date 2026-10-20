@@ -14,7 +14,8 @@ const navItems = [
   { label: "Portal de Datos", href: "https://datos.ciudaddecorrientes.gov.ar/", external: true },
 ];
 
-export function Header() {
+export function Header({ showNews = true }: { showNews?: boolean }) {
+  const items = showNews ? navItems : navItems.filter((item) => item.href !== "#novedades");
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -43,7 +44,7 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Navegacion principal">
-          {navItems.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -80,7 +81,7 @@ export function Header() {
           aria-label="Navegacion movil"
         >
           <Container>
-            {navItems.map((item) => (
+            {items.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
