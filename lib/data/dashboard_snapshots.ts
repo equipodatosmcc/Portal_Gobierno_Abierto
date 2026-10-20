@@ -45,6 +45,12 @@ function refresh<T>(key: string, load: () => Promise<T>, isValid: (data: T) => b
   return promise;
 }
 
+export async function findDashboardSnapshots() {
+  return prisma.dashboardSnapshot.findMany({
+    select: { key: true, refreshedAt: true, checkedAt: true, lastError: true },
+  });
+}
+
 export async function getDashboardData<T>(
   key: string,
   load: () => Promise<T>,
