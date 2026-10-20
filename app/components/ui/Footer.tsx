@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Container } from "@/app/components/ui/Container";
 
-export function Footer() {
+export function Footer({ showNews = true }: { showNews?: boolean }) {
   return (
     <footer className="bg-secondary text-secondary-foreground">
       <Container className="py-16">
@@ -37,11 +37,13 @@ export function Footer() {
                   Transparencia
                 </Link>
               </li>
-              <li>
-                <Link href="#novedades" className="transition-colors hover:text-primary">
-                  Novedades
-                </Link>
-              </li>
+              {showNews ? (
+                <li>
+                  <Link href="#novedades" className="transition-colors hover:text-primary">
+                    Novedades
+                  </Link>
+                </li>
+              ) : null}
               <li>
                 <Link href="#feedback" className="transition-colors hover:text-primary">
                   Solicitudes y Feedback

@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import DOMPurify from "isomorphic-dompurify";
 import { requireSessionManager } from "@/lib/content-auth";
 import { createNews, findManyNews, findNewsById, updateNews } from "@/lib/services/news";
+import { setNewsSectionVisible } from "@/lib/services/webcontent";
 import { serializeNewsContent } from "./content-format";
 
 const HTML_ALLOWED_TAGS = ["p", "br", "strong", "em", "u", "ul", "ol", "li", "a", "h3", "h4", "blockquote"];
@@ -234,6 +235,14 @@ export async function saveNewsAction(_: NewsEditorState, formData: FormData): Pr
   revalidatePath("/admin/noticias");
   revalidatePath("/admin/noticias/editor");
   redirect("/admin/noticias");
+}
+
+export async function toggleNewsSectionAction(formData: FormData) {
+  await requireSessionManager();
+  await setNewsSectionVisible(formData.get("visible") === "true");
+
+  revalidatePath("/");
+  revalidatePath("/admin/noticias");
 }
 
 export async function toggleNewsStatusAction(formData: FormData) {

@@ -23,7 +23,7 @@ import {
 import { buildDashboards } from "@/lib/data/dashboards";
 import { getSessionManager } from "@/lib/content-auth";
 import { findManyNews } from "@/lib/services/news";
-import { findManyWebContent } from "@/lib/services/webcontent";
+import { findManyWebContent, isNewsSectionVisible } from "@/lib/services/webcontent";
 
 export const revalidate = 1800;
 
@@ -59,6 +59,7 @@ async function getHomeData() {
     habTransporteData,
     retirosViaPublicaData,
     datasetsCount,
+    showNews,
   ] = await Promise.all([
     findManyNews({ onlyPublished: true }).catch(() => []),
     findManyWebContent({ onlyPublished: true }).catch(() => []),
@@ -72,6 +73,7 @@ async function getHomeData() {
     getHabTransporteData(),
     getRetirosViaPublicaData(),
     getCKANDatasetsCount(),
+    isNewsSectionVisible().catch(() => true),
   ]);
 
   const stripHtml = (html: string) => html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
@@ -111,6 +113,7 @@ async function getHomeData() {
     habTransporteData,
     retirosViaPublicaData,
     datasetsCount,
+    showNews,
   };
 }
 
@@ -130,6 +133,7 @@ export default async function Home() {
       habTransporteData,
       retirosViaPublicaData,
       datasetsCount,
+      showNews,
     },
     manager,
   ] = await Promise.all([getHomeData(), getSessionManager()]);
@@ -148,13 +152,13 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SkipLink />
-      <Header />
+      <Header showNews={showNews} />
       <main id="main-content" aria-label="Contenido principal del portal">
         <HeroSection />
         <StatsSection
           datasetsCount={datasetsCount}
           dashboardsCount={dashboardsCount}
-          newsCount={newsCount}
+          newsCount={showNews ? newsCount : null}
         />
         <GobiernoAbiertoSection items={gobiernoAbiertoItems} canEdit={Boolean(manager)} />
         <DashboardsSection
@@ -168,10 +172,10 @@ export default async function Home() {
           habTransporteData={habTransporteData}
           retirosViaPublicaData={retirosViaPublicaData}
         />
-        <NewsSection news={news} canEditNews={Boolean(manager)} />
+        {showNews ? <NewsSection news={news} canEditNews={Boolean(manager)} /> : null}
         <FeedbackSection />
       </main>
-      <Footer />
+      <Footer showNews={showNews} />
     </div>
   );
 }
