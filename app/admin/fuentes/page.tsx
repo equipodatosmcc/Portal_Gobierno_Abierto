@@ -1,5 +1,8 @@
 import { findDashboardSnapshots } from "@/lib/data/dashboard_snapshots";
 
+// Lee la base en cada request; sin esto Next intenta prerenderizarla en el build (sin DB)
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Estado de fuentes",
 };
