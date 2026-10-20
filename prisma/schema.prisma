@@ -73,3 +73,12 @@ model WebContent {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// Último resultado agregado bueno de cada tablero de la home (ver lib/data/dashboard_snapshots.ts)
+model DashboardSnapshot {
+  key         String    @id
+  data        Json?     // null si la fuente nunca respondió bien
+  refreshedAt DateTime? // último refresco exitoso
+  checkedAt   DateTime  // último intento, exitoso o no
+  lastError   String?
+}
