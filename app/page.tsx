@@ -19,7 +19,17 @@ import {
   getOdontologicasData,
   getRetirosViaPublicaData,
   getSacData,
+  ARBOLADO_EMPTY,
+  ENFERMERIA_EMPTY,
+  ODONTOLOGICAS_EMPTY,
+  INMUNIZACIONES_EMPTY,
+  SAC_EMPTY,
+  ACTAS_INFRACCION_EMPTY,
+  HAB_CHOFERES_EMPTY,
+  HAB_TRANSPORTE_EMPTY,
+  RETIROS_VIA_PUBLICA_EMPTY,
 } from "@/lib/data/ckanService";
+import { getDashboardData } from "@/lib/data/dashboard_snapshots";
 import { buildDashboards } from "@/lib/data/dashboards";
 import { getSessionManager } from "@/lib/content-auth";
 import { findManyNews } from "@/lib/services/news";
@@ -63,15 +73,15 @@ async function getHomeData() {
   ] = await Promise.all([
     findManyNews({ onlyPublished: true }).catch(() => []),
     findManyWebContent({ onlyPublished: true }).catch(() => []),
-    getArboladoData(),
-    getEnfermeriaData(),
-    getOdontologicasData(),
-    getInmunizacionesData(),
-    getSacData(),
-    getActasInfraccionData(),
-    getHabChoferesData(),
-    getHabTransporteData(),
-    getRetirosViaPublicaData(),
+    getDashboardData("arbolado", getArboladoData, (d) => d.topEspecies.length > 0, ARBOLADO_EMPTY),
+    getDashboardData("enfermeria", getEnfermeriaData, (d) => d.topPrestaciones.length > 0, ENFERMERIA_EMPTY),
+    getDashboardData("odontologicas", getOdontologicasData, (d) => d.topPracticas.length > 0, ODONTOLOGICAS_EMPTY),
+    getDashboardData("inmunizaciones", getInmunizacionesData, (d) => d.topVacunas.length > 0, INMUNIZACIONES_EMPTY),
+    getDashboardData("sac", getSacData, (d) => d.topAsuntos.length > 0, SAC_EMPTY),
+    getDashboardData("actas_infraccion", getActasInfraccionData, (d) => d.byMes.length > 0, ACTAS_INFRACCION_EMPTY),
+    getDashboardData("hab_choferes", getHabChoferesData, (d) => d.byAnio.length > 0, HAB_CHOFERES_EMPTY),
+    getDashboardData("hab_transporte", getHabTransporteData, (d) => d.byCategoria.length > 0, HAB_TRANSPORTE_EMPTY),
+    getDashboardData("retiros_via_publica", getRetirosViaPublicaData, (d) => d.byMes.length > 0, RETIROS_VIA_PUBLICA_EMPTY),
     getCKANDatasetsCount(),
     isNewsSectionVisible().catch(() => true),
   ]);

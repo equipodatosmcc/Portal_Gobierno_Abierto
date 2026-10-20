@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FileText, PenTool, LayoutTemplate, MessageSquare } from "lucide-react";
+import { Home, FileText, PenTool, LayoutTemplate, MessageSquare, Activity } from "lucide-react";
 
 const navItems = [
   {
@@ -39,6 +39,13 @@ const navItems = [
     description: "Bandeja del Buzón ciudadano",
     icon: <MessageSquare size={16} />,
     isActive: (pathname: string) => pathname.startsWith("/admin/mensajes"),
+  },
+  {
+    href: "/admin/fuentes",
+    label: "Estado de fuentes",
+    description: "Actualización de los tableros",
+    icon: <Activity size={16} />,
+    isActive: (pathname: string) => pathname.startsWith("/admin/fuentes"),
   },
 ];
 
